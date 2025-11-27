@@ -1,0 +1,1936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web3Base - AI Security Agent</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background: #0d1117;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            color: #c9d1d9;
+        }
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            margin: 0 auto;
+            background: #161b22;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            overflow: hidden;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+        }
+        .header {
+            background: linear-gradient(135deg, #1a1f2e 0%, #161b22 100%);
+            border-bottom: 2px solid rgba(0, 212, 255, 0.3);
+            color: #f0f6fc;
+            padding: 40px 40px 32px 40px;
+            text-align: center;
+            position: relative;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 12px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #00d4ff 0%, #00ff88 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header p {
+            opacity: 0.8;
+            font-size: 1.1em;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+        .security-layers {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .security-layer-badge {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            color: #00d4ff;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: help;
+        }
+        .security-layer-badge:hover {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: rgba(0, 212, 255, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+        }
+        .header-actions {
+            position: absolute;
+            top: 32px;
+            right: 40px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .info-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #c9d1d9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .info-icon:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #f0f6fc;
+            transform: scale(1.05);
+        }
+        .connect-wallet-btn {
+            padding: 14px 24px;
+            background: linear-gradient(135deg, #00d4ff 0%, #00ff88 100%);
+            border: none;
+            border-radius: 12px;
+            color: #0d1117;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+        }
+        .connect-wallet-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.5);
+        }
+        .connect-wallet-btn.connected {
+            background: rgba(63, 185, 80, 0.2);
+            color: #3fb950;
+            border: 1px solid #3fb950;
+        }
+        .wallet-address {
+            font-size: 0.85em;
+            color: #8b949e;
+            font-family: 'Courier New', monospace;
+        }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal {
+            background: #161b22;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            animation: modalSlideIn 0.3s ease;
+        }
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .modal-header {
+            padding: 24px 32px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #f0f6fc;
+        }
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #c9d1d9;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s ease;
+        }
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #f0f6fc;
+        }
+        .modal-body {
+            padding: 32px;
+            color: #c9d1d9;
+            line-height: 1.6;
+        }
+        .modal-body h3 {
+            color: #f0f6fc;
+            font-size: 1.2em;
+            margin-top: 24px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        .modal-body h3:first-child {
+            margin-top: 0;
+        }
+        .modal-body p {
+            margin-bottom: 16px;
+            font-size: 0.95em;
+        }
+        .modal-body ul {
+            margin-left: 20px;
+            margin-bottom: 16px;
+        }
+        .modal-body li {
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+        .modal-body code {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #58a6ff;
+        }
+        .content {
+            padding: 32px 40px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+        .dashboard-toggle {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .toggle-btn {
+            padding: 6px 18px;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 6px;
+            color: #00d4ff;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        .toggle-btn:hover {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: rgba(0, 212, 255, 0.5);
+        }
+        .toggle-btn.active {
+            background: rgba(0, 212, 255, 0.3);
+            border-color: rgba(0, 212, 255, 0.6);
+            box-shadow: 0 0 12px rgba(0, 212, 255, 0.3);
+        }
+        .dashboard-view {
+            display: none;
+            flex: 1;
+            overflow-y: auto;
+        }
+        .dashboard-view.active {
+            display: block;
+        }
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .data-card {
+            background: #0d1117;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 8px;
+            padding: 16px;
+            transition: all 0.3s ease;
+        }
+        .data-card:hover {
+            border-color: rgba(0, 212, 255, 0.4);
+            box-shadow: 0 4px 12px rgba(0, 212, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        .data-card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #00d4ff;
+        }
+        .data-card-body {
+            color: #c9d1d9;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+        .data-metric {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .data-metric:last-child {
+            border-bottom: none;
+        }
+        .data-metric-label {
+            color: #8b949e;
+            font-size: 0.85em;
+        }
+        .data-metric-value {
+            color: #f0f6fc;
+            font-weight: 500;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        .status-online {
+            background: #3fb950;
+            box-shadow: 0 0 8px rgba(63, 185, 80, 0.5);
+        }
+        .status-loading {
+            background: #f0883e;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .chat-section {
+            background: transparent;
+            border-radius: 0;
+            padding: 0;
+            border: none;
+            box-shadow: none;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+            height: 100%;
+        }
+        .chat-section h2 {
+            color: #f0f6fc;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.25em;
+            font-weight: 500;
+            margin-bottom: 24px;
+            flex-shrink: 0;
+        }
+        .chat-messages {
+            background: #0d1117;
+            border-radius: 8px;
+            padding: 24px;
+            flex: 1 1 auto;
+            overflow-y: auto;
+            overflow-x: hidden;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            min-height: 0;
+            max-height: none;
+        }
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+        .chat-messages::-webkit-scrollbar-track {
+            background: #0a0e14;
+            border-radius: 4px;
+        }
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 255, 255, 0.5);
+        }
+        .message {
+            margin-bottom: 20px;
+            padding: 16px 20px;
+            border-radius: 8px;
+        }
+        .message.user {
+            background: rgba(56, 139, 253, 0.1);
+            text-align: right;
+            border: 1px solid rgba(56, 139, 253, 0.2);
+        }
+        .message.agent {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .message.system {
+            background: rgba(0, 212, 255, 0.05);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            text-align: center;
+            font-size: 0.9em;
+            padding: 12px 16px;
+            color: #00d4ff;
+        }
+        .message.loading {
+            background: rgba(0, 212, 255, 0.08);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            text-align: left;
+            padding: 16px 20px;
+        }
+        .loading-spinner {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #00d4ff;
+        }
+        .loading-dots {
+            display: inline-flex;
+            gap: 4px;
+        }
+        .loading-dots span {
+            width: 6px;
+            height: 6px;
+            background: #00d4ff;
+            border-radius: 50%;
+            display: inline-block;
+            animation: loadingDots 1.4s infinite ease-in-out both;
+        }
+        .loading-dots span:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+        .loading-dots span:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+        @keyframes loadingDots {
+            0%, 80%, 100% {
+                opacity: 0.3;
+                transform: scale(0.8);
+            }
+            40% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+        .loading-text {
+            font-weight: 500;
+            font-size: 0.95em;
+        }
+        .message-label {
+            font-weight: 600;
+            font-size: 0.85em;
+            margin-bottom: 8px;
+            color: #8b949e;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .chat-input {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        .chat-input-row {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 16px 20px;
+            background: #0d1117;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            font-size: 0.95em;
+            color: #f0f6fc;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            transition: all 0.2s ease;
+            width: 100%;
+            min-width: 0;
+        }
+        .chat-input input:focus {
+            outline: none;
+            border-color: rgba(56, 139, 253, 0.5);
+            background: #161b22;
+            box-shadow: 0 0 0 3px rgba(56, 139, 253, 0.1);
+        }
+        .chat-input input::placeholder {
+            color: #6e7681;
+        }
+        .chat-input button {
+            padding: 14px 24px;
+            background: linear-gradient(135deg, #238636 0%, #2ea043 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 500;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-width: 60px;
+            box-shadow: 0 4px 12px rgba(35, 134, 54, 0.25), 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .chat-input button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .chat-input button:hover:not(:disabled) {
+            background: linear-gradient(135deg, #2ea043 0%, #3fb950 100%);
+            box-shadow: 0 6px 20px rgba(35, 134, 54, 0.35), 0 3px 6px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+        .chat-input button:hover:not(:disabled)::before {
+            opacity: 1;
+        }
+        .chat-input button:active:not(:disabled) {
+            background: linear-gradient(135deg, #1f7a2e 0%, #238636 100%);
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(35, 134, 54, 0.3), 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .chat-input button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .mcp-suggestion-btn {
+            padding: 4px 8px;
+            background: rgba(35, 134, 54, 0.1);
+            color: #3fb950;
+            border: 1px solid rgba(35, 134, 54, 0.3);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75em;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            white-space: nowrap;
+        }
+        .mcp-suggestion-btn:hover {
+            background: rgba(35, 134, 54, 0.2);
+            border-color: rgba(35, 134, 54, 0.5);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(35, 134, 54, 0.2);
+        }
+        .mcp-suggestion-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 2px rgba(35, 134, 54, 0.15);
+        }
+        .chat-input button:disabled {
+            background: #21262d;
+            color: #6e7681;
+            border-color: #30363d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        pre {
+            background: #0a0e14;
+            border: 1px solid rgba(0, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 0.9em;
+            color: #a0d0ff;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="info-icon" onclick="openInfoModal()" title="About Web3Base" style="position: absolute; top: 20px; right: 20px;">ℹ</div>
+            <h1>🛡️ Web3Base</h1>
+            <p>Your AI Security Agent for Web3</p>
+            
+            <!-- Compact Wallet Input -->
+            <div style="margin-top: 20px; max-width: 600px; margin-left: auto; margin-right: auto;">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button id="connectWalletBtn" class="connect-wallet-btn" onclick="toggleWalletConnection()" style="min-width: 140px;">
+                        🔗 Connect
+                    </button>
+                    <span style="color: #8b949e; font-size: 0.85em;">or</span>
+                    <input 
+                        type="text" 
+                        id="manualAddressInput" 
+                        placeholder="Enter address or ENS (vitalik.eth)" 
+                        style="flex: 1; padding: 12px 16px; background: #0d1117; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; font-size: 0.9em; color: #f0f6fc; font-family: 'Courier New', monospace;"
+                        onkeypress="if(event.key==='Enter') analyzeManualAddress()"
+                    />
+                    <button 
+                        onclick="analyzeManualAddress()" 
+                        style="padding: 12px 20px; background: linear-gradient(135deg, #238636 0%, #2ea043 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; white-space: nowrap; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(35, 134, 54, 0.25);"
+                        onmouseover="this.style.background='linear-gradient(135deg, #2ea043 0%, #3fb950 100%)'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(35, 134, 54, 0.35)';"
+                        onmouseout="this.style.background='linear-gradient(135deg, #238636 0%, #2ea043 100%)'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(35, 134, 54, 0.25)';"
+                    >
+                        🔍 Analyze
+                    </button>
+                </div>
+                <div id="walletStatus" style="margin-top: 8px; font-size: 0.85em; color: #8b949e; text-align: center;"></div>
+            </div>
+        </div>
+        
+        <!-- Info Modal -->
+        <div class="modal-overlay" id="infoModal" onclick="closeInfoModal(event)">
+            <div class="modal" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <h2>About Web3Base</h2>
+                    <button class="modal-close" onclick="closeInfoModal(event)">×</button>
+                </div>
+                <div class="modal-body">
+                    <h3>Overview</h3>
+                    <p>
+                        Web3Base is your AI-powered security agent for Web3. Built with <strong>AgentKit</strong>, 
+                        it provides intelligent security analysis, threat detection, and monitoring for wallets, transactions, projects, and blockchain infrastructure.
+                    </p>
+                    
+                    <h3>🛡️ Security Features</h3>
+                    <ul>
+                        <li><strong>🔍 Web Security</strong> - Phishing detection, CVE search, threat intelligence</li>
+                        <li><strong>🛡️ Wallet Security</strong> - Multi-chain wallet analysis, ENS resolution, USDC monitoring</li>
+                        <li><strong>🔎 Transaction Security</strong> - TX analysis, cross-chain verification, risk scoring</li>
+                        <li><strong>✅ Project Intelligence</strong> - Audit verification, rug pull detection, team checks</li>
+                        <li><strong>📊 Infrastructure Monitoring</strong> - Network health, node status, blockchain metrics</li>
+                        <li><strong>🤖 AI-Powered</strong> - Autonomous learning with Letta, real-time intelligence via Exa MCP</li>
+                    </ul>
+                    
+                    <h3>Technology Stack</h3>
+                    <ul>
+                        <li><strong>AgentKit</strong> - Coinbase's framework for building AI agents</li>
+                        <li><strong>MCP (Model Context Protocol)</strong> - For tool integration and agent coordination</li>
+                        <li><strong>A2A Coordination</strong> - Automatic agent-to-agent communication for complex tasks</li>
+                        <li><strong>Exa Search</strong> - Advanced semantic web search capabilities</li>
+                        <li><strong>Letta</strong> - Autonomous learning platform for continuous self-improvement</li>
+                    </ul>
+                    
+                    <h3>� Blockc-hain Data Sources</h3>
+                    <p>WebWatcher analyzes security threats using data from leading Web3 platforms:</p>
+                    <ul>
+                        <li><strong>🔵 Circle</strong> - USDC Stablecoin Platform: Access USDC transaction data, wallet balances, and payment flows for fraud detection</li>
+                        <li><strong>🔗 ZetaChain</strong> - Universal Blockchain: Query cross-chain transactions, verify bridge operations, track multi-chain assets</li>
+                        <li><strong>✅ Seedify</strong> - Web3 Launchpad: Check project audit status, team verification, and legitimacy indicators</li>
+                        <li><strong>⚡ Somnia</strong> - High-Performance Blockchain: Access real-time blockchain metrics, transaction patterns, and network health data</li>
+                        <li><strong>🖥️ NodeOps</strong> - Node Infrastructure: Monitor validator node health, uptime statistics, and infrastructure status</li>
+                    </ul>
+                    
+                    <h3>🤖 AI-Powered Security Analysis</h3>
+                    <p>Web3Base uses AI to analyze data from multiple sources:</p>
+                    <ul>
+                        <li><strong>Wallet Analysis</strong>: Checks USDC holdings (Circle), cross-chain activity (ZetaChain), on-chain behavior (Somnia)</li>
+                        <li><strong>Transaction Verification</strong>: Analyzes payment flows, cross-chain transfers, and transaction patterns</li>
+                        <li><strong>Project Vetting</strong>: Reviews audit status (Seedify), treasury holdings (Circle), deployment verification (ZetaChain)</li>
+                        <li><strong>Infrastructure Monitoring</strong>: Tracks node health (NodeOps), network performance (Somnia)</li>
+                    </ul>
+                    
+                    <h3>How It Works - Autonomous & Intelligent</h3>
+                    <p>
+                        Web3Base uses <strong>autonomous multi-agent coordination</strong> to analyze security threats. 
+                        When you provide a URL (no "scan" command needed), multiple specialized agents work together automatically:
+                    </p>
+                    <ul>
+                        <li><code>UrlFeatureAgent</code> extracts URL features and patterns</li>
+                        <li><code>UrlScanAgent</code> performs real-time security scan via urlscan.io</li>
+                        <li><code>PhishingRedFlagAgent</code> analyzes features for phishing indicators</li>
+                        <li>Results are automatically coordinated via <strong>A2A protocol</strong></li>
+                        <li>Every interaction is <strong>learned by Letta</strong> for continuous improvement</li>
+                    </ul>
+                    
+                    <h3>Autonomous Capabilities</h3>
+                    <ul>
+                        <li><strong>Automatic URL Detection</strong>: Type any URL - agent automatically scans (no "scan" command needed)</li>
+                        <li><strong>Real-Time Intelligence</strong>: Uses Exa MCP for latest CVE/threat data (not cached)</li>
+                        <li><strong>Multi-Agent Coordination</strong>: Automatically coordinates with specialized agents</li>
+                        <li><strong>Self-Improving</strong>: Learns from every interaction, gets smarter over time</li>
+                        <li><strong>Risk-Based Escalation</strong>: High-risk findings automatically escalate to triage agents</li>
+                    </ul>
+                    
+                    <h3>Usage</h3>
+                    <p>
+                        Simply type your security questions or use the quick action buttons above the input field. 
+                        Try commands like:
+                    </p>
+                    <ul>
+                        <li>"edwardtay.com" - Automatically scans (no "scan" command needed)</li>
+                        <li>"search CVE log4j" - Find latest vulnerability information</li>
+                        <li>"analyze transaction 0x..." - Analyze blockchain transactions</li>
+                    </ul>
+                    
+                    <p style="margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.08); color: #8b949e; font-size: 0.9em;">
+                        Built with <strong>Kiro</strong> | Made by <strong>Edward</strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="content">
+            <!-- Chat View -->
+            <div id="chatView" class="dashboard-view active">
+                <div class="chat-section">
+                <div class="chat-messages" id="chatMessages">
+                </div>
+                <div class="chat-input">
+                    <div class="chat-input-row">
+                        <input type="text" id="messageInput" placeholder="Ask about security analysis, transactions, addresses..." onkeypress="if(event.key==='Enter' && !event.shiftKey) { event.preventDefault(); sendMessage(); }">
+                        <button type="button" onclick="sendMessage()" id="sendButton" style="cursor: pointer;">➡️</button>
+                    </div>
+                </div>
+            </div>
+            </div>
+            
+            <!-- Dashboard View -->
+            <div id="dashboardView" class="dashboard-view">
+                <h2 style="color: #f0f6fc; margin-bottom: 20px; font-size: 1.5em;">🔗 Live Blockchain Data & Infrastructure</h2>
+                
+                <div class="data-grid">
+                    <!-- Circle Card -->
+                    <div class="data-card">
+                        <div class="data-card-header">
+                            🔵 Circle
+                            <span class="status-indicator status-loading" id="circle-status"></span>
+                        </div>
+                        <div class="data-card-body" id="circle-data">
+                            <div class="data-metric">
+                                <span class="data-metric-label">Status</span>
+                                <span class="data-metric-value">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ZetaChain Card -->
+                    <div class="data-card">
+                        <div class="data-card-header">
+                            🔗 ZetaChain
+                            <span class="status-indicator status-loading" id="zetachain-status"></span>
+                        </div>
+                        <div class="data-card-body" id="zetachain-data">
+                            <div class="data-metric">
+                                <span class="data-metric-label">Status</span>
+                                <span class="data-metric-value">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Seedify Card -->
+                    <div class="data-card">
+                        <div class="data-card-header">
+                            ✅ Seedify
+                            <span class="status-indicator status-loading" id="seedify-status"></span>
+                        </div>
+                        <div class="data-card-body" id="seedify-data">
+                            <div class="data-metric">
+                                <span class="data-metric-label">Status</span>
+                                <span class="data-metric-value">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Somnia Card -->
+                    <div class="data-card">
+                        <div class="data-card-header">
+                            ⚡ Somnia
+                            <span class="status-indicator status-loading" id="somnia-status"></span>
+                        </div>
+                        <div class="data-card-body" id="somnia-data">
+                            <div class="data-metric">
+                                <span class="data-metric-label">Status</span>
+                                <span class="data-metric-value">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- NodeOps Card -->
+                    <div class="data-card">
+                        <div class="data-card-header">
+                            🖥️ NodeOps
+                            <span class="status-indicator status-loading" id="nodeops-status"></span>
+                        </div>
+                        <div class="data-card-body" id="nodeops-data">
+                            <div class="data-metric">
+                                <span class="data-metric-label">Status</span>
+                                <span class="data-metric-value">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; color: #8b949e; font-size: 0.85em; margin-top: 20px;">
+                    Data refreshes every 30 seconds • Last updated: <span id="last-updated">Never</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API endpoint - Set API_URL environment variable in Vercel dashboard
+        // Defaults to Google Cloud Run URL if not set
+        // window.__API_URL__ will be injected by Vercel build script
+        // Localhost automatically uses local backend, production uses Cloud Run
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const API_BASE_URL = isLocalhost
+            ? 'http://localhost:8080'  // Localhost always uses local backend
+            : (typeof window !== 'undefined' && window.__API_URL__) 
+                ? window.__API_URL__   // Vercel: use injected API_URL
+                : 'https://webwatcher.lever-labs.com';  // Fallback to Cloud Run
+        
+        let threadId = 'web-' + Date.now();
+        
+        // Check Letta status on page load (only show if enabled)
+        async function checkLettaStatus() {
+            try {
+                const response = await fetch(API_BASE_URL + '/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: 'status check', threadId: 'status-' + Date.now() })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const lettaStatusEl = document.getElementById('lettaStatus');
+                    const lettaContainer = document.getElementById('lettaStatusContainer');
+                    if (lettaStatusEl && lettaContainer && data.lettaEnabled !== undefined) {
+                        if (data.lettaEnabled) {
+                            lettaStatusEl.innerHTML = '<span style="color: #3fb950;">✓ Letta Learning Active</span>';
+                            lettaStatusEl.title = 'Letta autonomous learning is enabled - agent learns from every interaction';
+                            lettaContainer.style.display = 'inline';
+                        } else {
+                            // Hide Letta status if not enabled
+                            lettaContainer.style.display = 'none';
+                        }
+                    }
+                }
+            } catch (error) {
+                // Silently fail - status check is optional
+                console.debug('Letta status check failed:', error);
+            }
+        }
+        
+        // Check status after page loads
+        setTimeout(checkLettaStatus, 1000);
+
+        function openInfoModal() {
+            const modal = document.getElementById('infoModal');
+            if (modal) {
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeInfoModal(event) {
+            if (event) {
+                event.stopPropagation();
+            }
+            const modal = document.getElementById('infoModal');
+            if (modal) {
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeInfoModal(event);
+            }
+        });
+
+        let loadingMessageId = null;
+
+        function showLoadingMessage() {
+            const messagesDiv = document.getElementById('chatMessages');
+            if (!messagesDiv) return;
+
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'loadingMessage';
+            loadingDiv.className = 'message loading';
+            loadingDiv.innerHTML = `
+                <div class="loading-spinner">
+                    <span class="loading-text">🤖 Analyzing your request</span>
+                    <div class="loading-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+            `;
+            messagesDiv.appendChild(loadingDiv);
+            loadingMessageId = 'loadingMessage';
+            
+            // Scroll to bottom
+            requestAnimationFrame(() => {
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            });
+        }
+        
+        function updateLoadingMessage(text) {
+            const loadingDiv = document.getElementById('loadingMessage');
+            if (loadingDiv) {
+                const textSpan = loadingDiv.querySelector('.loading-text');
+                if (textSpan) {
+                    textSpan.textContent = text;
+                }
+            }
+        }
+
+        function removeLoadingMessage() {
+            if (loadingMessageId) {
+                const loadingDiv = document.getElementById(loadingMessageId);
+                if (loadingDiv) {
+                    loadingDiv.remove();
+                }
+                loadingMessageId = null;
+            }
+        }
+
+        async function sendMessage() {
+            try {
+                const input = document.getElementById('messageInput');
+                if (!input) {
+                    console.error('Message input not found');
+                    return;
+                }
+                
+                let message = input.value.trim();
+                if (!message) {
+                    console.log('Empty message, ignoring');
+                    return;
+                }
+
+                // Auto-replace "audit my wallet" with actual wallet address if connected
+                if (connectedWallet && (message.toLowerCase() === 'audit my wallet' || message.toLowerCase() === 'audit wallet')) {
+                    message = `audit ${connectedWallet}`;
+                    console.log('Auto-replaced with connected wallet:', message);
+                }
+
+                const sendButton = document.getElementById('sendButton');
+                if (!sendButton) {
+                    console.error('Send button not found');
+                    return;
+                }
+                
+                sendButton.disabled = true;
+                sendButton.textContent = '⏳';
+
+                // Add user message to chat (show original if it was "audit my wallet")
+                addMessage('user', input.value.trim());
+                input.value = '';
+
+                // Show loading indicator
+                showLoadingMessage();
+                
+                // Simulate progressive loading messages
+                const loadingMessages = [
+                    '🤖 Analyzing your request',
+                    '🔍 Detecting input type',
+                    '🌐 Gathering blockchain data',
+                    '🧠 Processing with AI',
+                    '📊 Generating security report'
+                ];
+                let messageIndex = 0;
+                const loadingInterval = setInterval(() => {
+                    messageIndex = (messageIndex + 1) % loadingMessages.length;
+                    updateLoadingMessage(loadingMessages[messageIndex]);
+                }, 1500);
+
+                // Debug: Log API URL being used
+                console.log('API_BASE_URL:', API_BASE_URL);
+                console.log('Full endpoint:', API_BASE_URL + '/api/chat');
+                
+                const response = await fetch(API_BASE_URL + '/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message, threadId })
+                });
+                
+                // Clear loading interval
+                clearInterval(loadingInterval);
+
+                // Remove loading indicator
+                removeLoadingMessage();
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+                    console.error('API Error:', response.status, errorData);
+                    throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                // Show routing information if available
+                if (data.routing) {
+                    const routingBadge = getRoutingBadge(data.routing.type);
+                    addMessage('system', `${routingBadge} ${data.routing.description || ''}`);
+                }
+                
+                // Update Letta status indicator (only show if Letta is enabled)
+                if (data.lettaEnabled !== undefined) {
+                    const lettaStatusEl = document.getElementById('lettaStatus');
+                    const lettaContainer = document.getElementById('lettaStatusContainer');
+                    if (lettaStatusEl && lettaContainer) {
+                        if (data.lettaEnabled) {
+                            lettaStatusEl.innerHTML = '<span style="color: #3fb950;">✓ Letta Learning Active</span>';
+                            lettaStatusEl.title = 'Letta autonomous learning is enabled - agent learns from every interaction';
+                            lettaContainer.style.display = 'inline';
+                        } else {
+                            // Hide Letta status if not enabled
+                            lettaContainer.style.display = 'none';
+                        }
+                    }
+                }
+                
+                if (data.response) {
+                    // Add Letta learning indicator to response if Letta is enabled
+                    let responseText = data.response;
+                    
+                    // Add demo showcase indicators
+                    if (data.metadata) {
+                        const indicators = [];
+                        if (data.metadata.a2aCoordinated) {
+                            indicators.push('🤖 **A2A Coordination**: Multi-agent coordination activated');
+                        }
+                        if (data.metadata.realTimeDataUsed) {
+                            indicators.push('⚡ **Real-Time Data**: Latest threat intelligence retrieved');
+                        }
+                        if (data.metadata.autonomousAction) {
+                            indicators.push('🎯 **Autonomous Action**: Agent acted independently');
+                        }
+                        if (data.lettaEnabled) {
+                            indicators.push('💡 **Learning**: This interaction is being learned for continuous improvement');
+                        }
+                        
+                        if (indicators.length > 0) {
+                            responseText += '\n\n---\n**✨ Autonomous Capabilities Demonstrated:**\n' + indicators.map(i => `- ${i}`).join('\n');
+                        }
+                    } else if (data.lettaEnabled) {
+                        // Fallback: Just show Letta learning
+                        responseText += '\n\n---\n*💡 This interaction is being learned by Letta for continuous improvement*';
+                    }
+                    
+                    addMessage('agent', responseText);
+                } else {
+                    addMessage('agent', 'Error: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+                console.error('Error details:', {
+                    message: error.message,
+                    stack: error.stack,
+                    API_BASE_URL: API_BASE_URL
+                });
+                // Clear any loading intervals
+                if (typeof loadingInterval !== 'undefined') {
+                    clearInterval(loadingInterval);
+                }
+                
+                // Remove loading indicator on error
+                removeLoadingMessage();
+                
+                // More detailed error message
+                let errorMsg = 'Failed to send message. ';
+                if (error.message) {
+                    errorMsg += error.message;
+                } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    errorMsg += 'Network error - cannot reach API server. Check API_URL configuration.';
+                } else {
+                    errorMsg += 'Unknown error occurred.';
+                }
+                errorMsg += ` (API: ${API_BASE_URL})`;
+                addMessage('agent', 'Error: ' + errorMsg);
+            } finally {
+                const sendButton = document.getElementById('sendButton');
+                if (sendButton) {
+                    sendButton.disabled = false;
+                    sendButton.textContent = '➡️';
+                }
+            }
+        }
+        
+        // Make sendMessage available globally
+        window.sendMessage = sendMessage;
+        
+        // View switching
+        function switchView(view) {
+            const chatView = document.getElementById('chatView');
+            const dashboardView = document.getElementById('dashboardView');
+            const buttons = document.querySelectorAll('.toggle-btn');
+            
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            if (view === 'chat') {
+                chatView.classList.add('active');
+                dashboardView.classList.remove('active');
+                buttons[0].classList.add('active');
+            } else {
+                chatView.classList.remove('active');
+                dashboardView.classList.add('active');
+                buttons[1].classList.add('active');
+                // Load dashboard data when switching to it
+                loadDashboardData();
+            }
+        }
+        window.switchView = switchView;
+        
+        // Dashboard data loading
+        let dashboardInterval = null;
+        
+        async function loadDashboardData() {
+            try {
+                // Fetch data from all partners
+                const response = await fetch(API_BASE_URL + '/api/dashboard');
+                if (response.ok) {
+                    const data = await response.json();
+                    updateDashboard(data);
+                } else {
+                    // Use mock data if API not available
+                    updateDashboard(getMockDashboardData());
+                }
+                
+                // Update last updated time
+                document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
+                
+            } catch (error) {
+                console.error('Dashboard data error:', error);
+                updateDashboard(getMockDashboardData());
+            }
+        }
+        
+        function updateDashboard(data) {
+            // Circle
+            if (data.circle) {
+                document.getElementById('circle-status').className = 'status-indicator status-online';
+                document.getElementById('circle-data').innerHTML = `
+                    <div class="data-metric">
+                        <span class="data-metric-label">USDC Market Cap</span>
+                        <span class="data-metric-value">${data.circle.marketCap || '$34.5B'}</span>
+                    </div>
+                    <div class="data-metric">
+                        <span class="data-metric-label">24h Volume</span>
+                        <span class="data-metric-value">${data.circle.volume24h || '$5.2B'}</span>
+                    </div>
+                    <div class="data-metric">
+                        <span class="data-metric-label">API Status</span>
+                        <span class="data-metric-value">${data.circle.status || 'Operational'}</span>
+                    </div>
+                `;
+            }
+            
+            // ZetaChain
+            if (data.zetachain) {
+                document.getElementById('zetachain-status').className = 'status-indicator status-online';
+                document.getElementById('zetachain-data').innerHTML = `
+                    <div class="data-metric">
+                        <span class="data-metric-label">Block Height</span>
+                        <span class="data-metric-value">${data.zetachain.blockHeight || '2,456,789'}</span>
+                    </div>
+                    <div class="data-metric">
+                        <span class="data-metric-label">Cross-Chain TXs</span>
+                        <span class="data-metric-value">${data.zetachain.crossChainTxs || '1,234'}</span>
+                    </div>
+                    <div class="data-metric">
+                        <span class="data-metric-label">Network</span>
+                        <span class="data-metric-value">${data.zetachain.network || 'Mainnet'}</span>
+                    </div>
+                `;
+            }
+            
+            // Seedify
+            if (data.seedify) {
+                document.getElementById('seedify-status').className = 'status-indicator status-online';
+                document.getElementById('seedify-data').innerHTML = `
+                    <div class="data-metric">
+                        <span class="data-metric-label">Total Projects</span>
+                        <span class="data-metric-value">${data.seedify.totalProjects || '250+'}</span>
+                    </div>
+                    <div class="data-metric">
+                        <span class="data-metric-label">Active Launches</span>
+                        <span class="data-metric-value">${data.seedify.activeLaunches || '12'}</span>
+                    </div>
+                    <div class="data-metric">
+                        <span class="data-metric-label">Total Raised</span>
+                        <span class="data-metric-value">${data.seedify.totalRaised || '$500M+'}</span>
+                    </div>
+                `;
+            }
+            
+            // Somnia
+            if (data.somnia) {
+                document.getElementById('somnia-status').className = 'status-indicator status-online';
+                document.getElementById('somnia-data').innerHTML = `
+                    <div class="data-metric">
+                        <span class="data-metric-label">TPS</span>
+                        <span class="data-metric-value">${data.somnia.tps || '10,000+'}</span>
+                    </div>
+                    <div class="data-metric">
+                        <span class="data-metric-label">Block Time</span>
+                        <span class="data-metric-value">${data.somnia.blockTime || '0.4s'}</span>
+                    </div>
+                    <div class="data-metric">
+                        <span class="data-metric-label">Active Nodes</span>
+                        <span class="data-metric-value">${data.somnia.activeNodes || '150'}</span>
+                    </div>
+                `;
+            }
+            
+            // NodeOps
+            if (data.nodeops) {
+                document.getElementById('nodeops-status').className = 'status-indicator status-online';
+                document.getElementById('nodeops-data').innerHTML = `
+                    <div class="data-metric">
+                        <span class="data-metric-label">Monitored Nodes</span>
+                        <span class="data-metric-value">${data.nodeops.monitoredNodes || '500+'}</span>
+                    </div>
+                    <div class="data-metric">
+                        <span class="data-metric-label">Avg Uptime</span>
+                        <span class="data-metric-value">${data.nodeops.avgUptime || '99.9%'}</span>
+                    </div>
+                    <div class="data-metric">
+                        <span class="data-metric-label">Status</span>
+                        <span class="data-metric-value">${data.nodeops.status || 'All Systems Go'}</span>
+                    </div>
+                `;
+            }
+        }
+        
+        function getMockDashboardData() {
+            return {
+                circle: {
+                    marketCap: '$34.5B',
+                    volume24h: '$5.2B',
+                    status: 'Operational'
+                },
+                zetachain: {
+                    blockHeight: '2,456,789',
+                    crossChainTxs: '1,234',
+                    network: 'Mainnet'
+                },
+                seedify: {
+                    totalProjects: '250+',
+                    activeLaunches: '12',
+                    totalRaised: '$500M+'
+                },
+                somnia: {
+                    tps: '10,000+',
+                    blockTime: '0.4s',
+                    activeNodes: '150'
+                },
+                nodeops: {
+                    monitoredNodes: '500+',
+                    avgUptime: '99.9%',
+                    status: 'All Systems Go'
+                }
+            };
+        }
+        
+        // Auto-refresh dashboard every 30 seconds when visible
+        setInterval(() => {
+            const dashboardView = document.getElementById('dashboardView');
+            if (dashboardView && dashboardView.classList.contains('active')) {
+                loadDashboardData();
+            }
+        }, 30000);
+        
+        // Wallet Connection
+        let connectedWallet = null;
+        
+        // Toggle wallet connection (connect or disconnect)
+        async function toggleWalletConnection() {
+            const btn = document.getElementById('connectWalletBtn');
+            const status = document.getElementById('walletStatus');
+            
+            // If already connected, disconnect
+            if (connectedWallet) {
+                connectedWallet = null;
+                btn.textContent = '🔗 Connect';
+                btn.classList.remove('connected');
+                status.textContent = '';
+                addMessage('system', '👋 Wallet disconnected');
+                return;
+            }
+            
+            try {
+                // Check if MetaMask or other Web3 wallet is installed
+                if (typeof window.ethereum === 'undefined') {
+                    alert('No Web3 wallet detected! Please install MetaMask or another Web3 wallet.');
+                    window.open('https://metamask.io/download/', '_blank');
+                    return;
+                }
+                
+                btn.textContent = '🔄 ...';
+                btn.disabled = true;
+                
+                // Request account access
+                const accounts = await window.ethereum.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+                
+                if (accounts && accounts.length > 0) {
+                    connectedWallet = accounts[0];
+                    
+                    // Update button
+                    const shortAddress = connectedWallet.slice(0, 6) + '...' + connectedWallet.slice(-4);
+                    btn.innerHTML = `✅ ${shortAddress}`;
+                    btn.classList.add('connected');
+                    btn.disabled = false;
+                    status.innerHTML = `<span style="color: #3fb950;">Connected</span> • Click to disconnect`;
+                    
+                    // Fetch comprehensive wallet data from all APIs
+                    fetchWalletData(connectedWallet);
+                }
+            } catch (error) {
+                console.error('Wallet connection error:', error);
+                btn.textContent = '🔗 Connect';
+                btn.disabled = false;
+                status.textContent = '';
+                
+                if (error.code === 4001) {
+                    addMessage('system', '❌ Wallet connection rejected');
+                } else {
+                    addMessage('system', `❌ Error: ${error.message}`);
+                }
+            }
+        }
+        window.toggleWalletConnection = toggleWalletConnection;
+        window.connectWallet = toggleWalletConnection; // Backward compatibility
+        
+        // Analyze manually entered address (supports ENS)
+        async function analyzeManualAddress() {
+            const input = document.getElementById('manualAddressInput');
+            const status = document.getElementById('walletStatus');
+            let inputValue = input.value.trim();
+            
+            // Validate input
+            if (!inputValue) {
+                addMessage('system', '⚠️ Please enter an address or ENS name');
+                return;
+            }
+            
+            let resolvedAddress = inputValue;
+            let displayName = inputValue;
+            
+            // Check if it's an ENS name (ends with .eth or contains no 0x)
+            if (inputValue.endsWith('.eth') || !inputValue.startsWith('0x')) {
+                addMessage('system', `🔍 Resolving ENS name: ${inputValue}...`);
+                
+                try {
+                    // Resolve ENS via backend
+                    const response = await fetch(API_BASE_URL + '/api/resolve-ens', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: inputValue })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success && result.address) {
+                        resolvedAddress = result.address;
+                        displayName = inputValue; // Keep ENS name for display
+                        addMessage('system', `✅ Resolved ${inputValue} → ${resolvedAddress.slice(0, 6)}...${resolvedAddress.slice(-4)}`);
+                    } else {
+                        addMessage('system', `⚠️ Could not resolve ENS name: ${inputValue}`);
+                        return;
+                    }
+                } catch (error) {
+                    console.error('ENS resolution error:', error);
+                    addMessage('system', `⚠️ Error resolving ENS name. Please try the address directly.`);
+                    return;
+                }
+            } else if (!/^0x[a-fA-F0-9]{40}$/.test(inputValue)) {
+                addMessage('system', '⚠️ Invalid address format. Use 0x... address or .eth name');
+                return;
+            }
+            
+            // Clear input
+            input.value = '';
+            
+            // Set as connected wallet for consistency
+            connectedWallet = resolvedAddress;
+            
+            // Update connect button to show address or ENS
+            const btn = document.getElementById('connectWalletBtn');
+            const shortDisplay = displayName.length > 20 
+                ? displayName.slice(0, 8) + '...' + displayName.slice(-4)
+                : displayName.endsWith('.eth') 
+                    ? displayName 
+                    : resolvedAddress.slice(0, 6) + '...' + resolvedAddress.slice(-4);
+            btn.innerHTML = `✅ ${shortDisplay}`;
+            btn.classList.add('connected');
+            status.innerHTML = `<span style="color: #58a6ff;">${displayName.endsWith('.eth') ? 'ENS' : 'Manual'}</span> • Click Connect to disconnect`;
+            
+            // Fetch wallet data
+            fetchWalletData(resolvedAddress);
+        }
+        window.analyzeManualAddress = analyzeManualAddress;
+        
+        // AI Security Summary Generator
+        function generateAISecuritySummary(result) {
+            const insights = [];
+            const recommendations = [];
+            const positives = [];
+            
+            // Analyze MetaSleuth risk
+            if (result.metasleuth && !result.metasleuth.error) {
+                const risk = result.metasleuth;
+                if (risk.riskLevel === 'CRITICAL' || risk.riskLevel === 'HIGH') {
+                    insights.push({ severity: 'high', message: `High risk score (${risk.riskScore}/100)` });
+                    recommendations.push('🔴 Avoid interacting until risks are understood');
+                } else if (risk.riskLevel === 'MEDIUM') {
+                    recommendations.push('🟡 Proceed with caution');
+                } else {
+                    positives.push('Low risk score');
+                }
+            }
+            
+            // Analyze Passport
+            if (result.passport && !result.passport.error) {
+                if (!result.passport.isHuman) {
+                    recommendations.push('🟡 Set up Gitcoin Passport to improve reputation');
+                } else if (result.passport.trustLevel === 'VERY_HIGH' || result.passport.trustLevel === 'HIGH') {
+                    positives.push(`Strong identity (${result.passport.stampCount} stamps)`);
+                }
+            }
+            
+            // Analyze approvals
+            if (result.revoke && result.revoke.summary) {
+                if (result.revoke.summary.hasRiskyApprovals) {
+                    insights.push({ severity: 'high', message: 'Risky token approvals found' });
+                    recommendations.push('🔴 URGENT: Revoke risky approvals immediately');
+                } else if (result.revoke.summary.unlimitedApprovals > 0) {
+                    recommendations.push(`🟡 Review ${result.revoke.summary.unlimitedApprovals} unlimited approvals`);
+                } else if (result.revoke.summary.totalApprovals === 0) {
+                    positives.push('No token approvals');
+                }
+            }
+            
+            // Analyze activity
+            const txCount = result.alchemy?.transactionCount || result.blockscout?.transactionCount || 0;
+            const value = result.thirdweb?.totalValueUSD || '0.00';
+            
+            // Determine overall risk
+            const highRisk = insights.filter(i => i.severity === 'high').length;
+            let overallRisk = 'LOW';
+            let riskColor = '#3fb950';
+            
+            if (highRisk > 0) {
+                overallRisk = 'HIGH';
+                riskColor = '#f85149';
+            } else if (recommendations.some(r => r.includes('🟡'))) {
+                overallRisk = 'MEDIUM';
+                riskColor = '#f0883e';
+            }
+            
+            // Generate summary
+            let summary = '';
+            if (overallRisk === 'HIGH') {
+                summary = '⚠️ <strong>High-risk factors identified</strong> - Please review carefully. ';
+            } else if (overallRisk === 'MEDIUM') {
+                summary = '⚡ <strong>Some security concerns found</strong> - Recommended actions below. ';
+            } else {
+                summary = '✅ <strong>Wallet appears secure</strong> - Good security practices detected. ';
+            }
+            
+            if (txCount > 0) {
+                summary += `This wallet has ${txCount} transactions with a portfolio value of $${value}. `;
+            } else {
+                summary += 'This is a new or inactive wallet with no transaction history. ';
+            }
+            
+            if (positives.length > 0) {
+                summary += `<strong>Strengths:</strong> ${positives.join(', ')}.`;
+            }
+            
+            // Add engaging next steps
+            const nextSteps = generateNextSteps(result, overallRisk, recommendations);
+            
+            return {
+                overallRisk,
+                riskColor,
+                summary,
+                recommendations,
+                positives,
+                nextSteps
+            };
+        }
+        
+        // Generate engaging next steps for user
+        function generateNextSteps(result, risk, recommendations) {
+            const steps = [];
+            
+            // Based on risk level
+            if (risk === 'HIGH') {
+                steps.push('🚨 <strong>Immediate action needed!</strong> Address the critical issues above first.');
+            }
+            
+            if (result.revoke?.summary?.totalApprovals > 0) {
+                steps.push(`<a href="${result.revoke.summary.revokeUrl}" target="_blank" style="color: #58a6ff;">Review your ${result.revoke.summary.totalApprovals} token approvals</a> on Revoke.cash`);
+            }
+            
+            const value = parseFloat(result.thirdweb?.totalValueUSD || '0');
+            if (value > 1000) {
+                steps.push('Consider using a hardware wallet for high-value assets');
+            }
+            
+            // Always end with engagement
+            steps.push('💬 <strong>Questions?</strong> Ask me anything about your wallet security!');
+            
+            return steps;
+        }
+        
+        // Fetch comprehensive wallet data from all 4 APIs
+        async function fetchWalletData(address) {
+            try {
+                addMessage('system', '🔄 <strong>Analyzing wallet...</strong>');
+                
+                const response = await fetch(API_BASE_URL + '/api/wallet/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch wallet data');
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Generate AI Security Summary
+                    const aiSummary = generateAISecuritySummary(result);
+                    
+                    // Display AI Summary first (without next steps)
+                    let message = `<div style="margin-bottom: 16px; padding: 16px; background: rgba(0, 212, 255, 0.08); border-left: 4px solid ${aiSummary.riskColor}; border-radius: 8px;">`;
+                    message += `<div style="font-size: 1.1em; font-weight: 600; margin-bottom: 8px;">🤖 AI Security Analysis</div>`;
+                    message += `<div style="font-size: 0.95em; line-height: 1.7; color: #c9d1d9;">${aiSummary.summary}</div>`;
+                    message += `</div>`;
+                    
+                    // Build 2-column layout
+                    message += `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px;">`;
+                    
+                    // LEFT COLUMN - Portfolio Overview
+                    message += `<div>`;
+                    
+                    // MetaSleuth Risk Analysis (Priority - most important)
+                    const metasleuth = result.metasleuth;
+                    if (metasleuth && !metasleuth.error && metasleuth.riskScore > 0) {
+                        const riskColor = metasleuth.riskLevel === 'CRITICAL' ? '#da3633' : metasleuth.riskLevel === 'HIGH' ? '#f85149' : metasleuth.riskLevel === 'MEDIUM' ? '#f0883e' : '#3fb950';
+                        message += `<div style="margin-bottom: 16px; padding: 12px; background: rgba(248, 81, 73, 0.05); border: 1px solid ${riskColor}; border-radius: 8px;">`;
+                        message += `<div style="font-size: 1.1em; font-weight: 600; margin-bottom: 8px;">🛡️ Risk Analysis</div>`;
+                        message += `<div style="font-size: 0.9em; line-height: 1.6;">`;
+                        message += `<div style="color: ${riskColor}; font-weight: 600; margin-bottom: 4px;">Risk: ${metasleuth.riskLevel} (${metasleuth.riskScore}/100)</div>`;
+                        
+                        if (metasleuth.riskFactors && metasleuth.riskFactors.length > 0) {
+                            message += `<div style="font-size: 0.85em; margin-top: 6px;">`;
+                            metasleuth.riskFactors.forEach(factor => {
+                                message += `⚠️ ${factor}<br>`;
+                            });
+                            message += `</div>`;
+                        }
+                        
+                        if (metasleuth.labels && metasleuth.labels.length > 0) {
+                            message += `<div style="margin-top: 6px; font-size: 0.85em;">`;
+                            metasleuth.labels.slice(0, 3).forEach(label => {
+                                message += `<span style="display: inline-block; background: rgba(248, 81, 73, 0.15); padding: 2px 8px; border-radius: 4px; margin: 2px;">${label}</span>`;
+                            });
+                            message += `</div>`;
+                        }
+                        
+                        message += `</div></div>`;
+                    }
+                    
+                    // Nansen Intelligence (if available and no MetaSleuth)
+                    const nansen = result.nansen;
+                    if (nansen && !nansen.error && (!metasleuth || metasleuth.error || metasleuth.riskScore === 0)) {
+                        message += `<div style="margin-bottom: 16px; padding: 12px; background: rgba(0, 212, 255, 0.05); border: 1px solid rgba(0, 212, 255, 0.2); border-radius: 8px;">`;
+                        message += `<div style="font-size: 1.1em; font-weight: 600; margin-bottom: 8px;">🧠 Intelligence</div>`;
+                        message += `<div style="font-size: 0.9em; line-height: 1.6;">`;
+                        
+                        if (nansen.walletType) {
+                            message += `🏷️ <strong>Type:</strong> ${nansen.walletType}<br>`;
+                        }
+                        
+                        if (nansen.entity) {
+                            message += `🏢 <strong>Entity:</strong> ${nansen.entity}<br>`;
+                        }
+                        
+                        if (nansen.labels && nansen.labels.length > 0) {
+                            message += `<div style="margin-top: 6px; font-size: 0.85em;">`;
+                            nansen.labels.slice(0, 3).forEach(label => {
+                                message += `<span style="display: inline-block; background: rgba(0, 212, 255, 0.15); padding: 2px 8px; border-radius: 4px; margin: 2px;">${label}</span>`;
+                            });
+                            message += `</div>`;
+                        }
+                        
+                        if (nansen.riskLevel) {
+                            const riskColor = nansen.riskLevel === 'HIGH' ? '#f85149' : nansen.riskLevel === 'MEDIUM' ? '#f0883e' : '#3fb950';
+                            message += `<div style="margin-top: 6px; color: ${riskColor};">🛡️ Risk: ${nansen.riskLevel}</div>`;
+                        }
+                        
+                        message += `</div></div>`;
+                    }
+                    
+                    // Portfolio value and counts
+                    const tw = result.thirdweb;
+                    if (tw && !tw.error) {
+                        message += `<div style="margin-bottom: 16px;">`;
+                        message += `<div style="font-size: 1.1em; font-weight: 600; margin-bottom: 8px;">💼 Portfolio</div>`;
+                        message += `<div style="font-size: 0.9em; line-height: 1.6;">`;
+                        message += `💰 <strong>Value:</strong> $${tw.totalValueUSD || '0.00'}<br>`;
+                        message += `🏷️ <strong>Tokens:</strong> ${tw.tokenCount || 0}<br>`;
+                        message += `🖼️ <strong>NFTs:</strong> ${tw.nftCount || 0}<br>`;
+                        message += `📊 <strong>Diversity:</strong> ${tw.diversityScore || 0}/100`;
+                        message += `</div></div>`;
+                        
+                        // Top tokens
+                        if (tw.topTokens && tw.topTokens.length > 0) {
+                            message += `<div style="margin-bottom: 16px;">`;
+                            message += `<div style="font-size: 1.1em; font-weight: 600; margin-bottom: 8px;">💎 Top Holdings</div>`;
+                            message += `<div style="font-size: 0.85em; line-height: 1.5;">`;
+                            tw.topTokens.slice(0, 3).forEach(token => {
+                                const balance = parseFloat(token.balance) / Math.pow(10, token.decimals);
+                                const valueUSD = parseFloat(token.balanceUSD || '0');
+                                message += `${token.symbol}: ${balance.toFixed(2)} ($${valueUSD.toFixed(2)})<br>`;
+                            });
+                            message += `</div></div>`;
+                        }
+                        
+                        // Multi-chain
+                        if (tw.chainBreakdown && tw.chainBreakdown.length > 0) {
+                            message += `<div style="margin-bottom: 16px;">`;
+                            message += `<div style="font-size: 1.1em; font-weight: 600; margin-bottom: 8px;">⛓️ Chains</div>`;
+                            message += `<div style="font-size: 0.85em; line-height: 1.5;">`;
+                            tw.chainBreakdown.forEach(chain => {
+                                const chainNames = {1: 'ETH', 137: 'Polygon', 56: 'BSC', 42161: 'Arbitrum', 10: 'Optimism'};
+                                const chainName = chainNames[chain.chainId] || `Chain ${chain.chainId}`;
+                                message += `${chainName}: ${chain.tokens.length} ($${chain.totalValueUSD.toFixed(2)})<br>`;
+                            });
+                            message += `</div></div>`;
+                        }
+                    }
+                    
+                    message += `</div>`;
+                    
+                    // RIGHT COLUMN - Activity & Security
+                    message += `<div>`;
+                    
+                    // Activity metrics
+                    const alchemy = result.alchemy;
+                    const bs = result.blockscout;
+                    if ((alchemy && !alchemy.error) || (bs && !bs.error)) {
+                        message += `<div style="margin-bottom: 16px;">`;
+                        message += `<div style="font-size: 1.1em; font-weight: 600; margin-bottom: 8px;">📊 Activity</div>`;
+                        message += `<div style="font-size: 0.9em; line-height: 1.6;">`;
+                        
+                        if (alchemy && !alchemy.error) {
+                            message += `💰 <strong>ETH:</strong> ${alchemy.ethBalance || '0'}<br>`;
+                            message += `📝 <strong>Transactions:</strong> ${alchemy.transactionCount || 0}<br>`;
+                            message += `⚡ <strong>Activity:</strong> ${alchemy.activityScore || 0}/100`;
+                        } else if (bs && !bs.error) {
+                            const balance = bs.balance ? (parseInt(bs.balance) / 1e18).toFixed(4) : '0';
+                            message += `💰 <strong>ETH:</strong> ${balance}<br>`;
+                            message += `📝 <strong>Transactions:</strong> ${bs.transactionCount || 0}<br>`;
+                            message += `⛽ <strong>Gas Used:</strong> ${bs.gasUsed || 0}`;
+                        }
+                        
+                        message += `</div></div>`;
+                    }
+                    
+                    // Recent transactions
+                    if (bs && !bs.error && bs.transactions && bs.transactions.length > 0) {
+                        message += `<div style="margin-bottom: 16px;">`;
+                        message += `<div style="font-size: 1.1em; font-weight: 600; margin-bottom: 8px;">📜 Recent</div>`;
+                        message += `<div style="font-size: 0.85em; line-height: 1.5;">`;
+                        bs.transactions.slice(0, 3).forEach(tx => {
+                            const shortHash = tx.hash.slice(0, 8) + '...';
+                            const value = tx.value ? (parseInt(tx.value) / 1e18).toFixed(3) : '0';
+                            const status = tx.status === 'ok' ? '✅' : '❌';
+                            message += `${status} ${shortHash}: ${value} ETH<br>`;
+                        });
+                        message += `</div></div>`;
+                    }
+                    
+                    // Passport Verification (always show)
+                    const passport = result.passport;
+                    if (passport && !passport.error) {
+                        const trustColor = passport.trustLevel === 'VERY_HIGH' || passport.trustLevel === 'HIGH' ? '#3fb950' : 
+                                          passport.trustLevel === 'MEDIUM' ? '#f0883e' : '#8b949e';
+                        message += `<div style="margin-bottom: 16px;">`;
+                        message += `<div style="font-size: 1.1em; font-weight: 600; margin-bottom: 8px;">✅ Verification</div>`;
+                        message += `<div style="font-size: 0.9em; line-height: 1.6;">`;
+                        message += `<div style="color: ${trustColor}; font-weight: 600;">${passport.isHuman ? '👤 Human Verified' : '🤖 Not Verified'}</div>`;
+                        message += `<strong>Trust:</strong> ${passport.trustLevel}<br>`;
+                        message += `<strong>Score:</strong> ${passport.score.toFixed(1)}<br>`;
+                        message += `<strong>Stamps:</strong> ${passport.stampCount}`;
+                        
+                        if (passport.stamps && passport.stamps.length > 0) {
+                            message += `<div style="font-size: 0.8em; margin-top: 4px; color: #8b949e;">`;
+                            message += passport.stamps.slice(0, 3).join(', ');
+                            if (passport.stamps.length > 3) message += `, +${passport.stamps.length - 3} more`;
+                            message += `</div>`;
+                        }
+                        message += `</div></div>`;
+                    }
+                    
+                    // Security score
+                    const moralis = result.moralis;
+                    if (moralis && !moralis.error && moralis.analysis) {
+                        message += `<div style="margin-bottom: 16px;">`;
+                        message += `<div style="font-size: 1.1em; font-weight: 600; margin-bottom: 8px;">🛡️ Security</div>`;
+                        message += `<div style="font-size: 0.9em; line-height: 1.6;">`;
+                        const securityScore = moralis.analysis.securityScore || 100;
+                        message += `<strong>Score:</strong> ${securityScore}/100<br>`;
+                        
+                        if (moralis.analysis.riskFactors && moralis.analysis.riskFactors.length > 0) {
+                            message += `<div style="font-size: 0.85em; color: #f0883e; margin-top: 4px;">`;
+                            moralis.analysis.riskFactors.slice(0, 2).forEach(risk => {
+                                message += `⚠️ ${risk}<br>`;
+                            });
+                            message += `</div>`;
+                        }
+                        message += `</div></div>`;
+                    }
+                    
+                    // Revoke.cash Approvals
+                    const revoke = result.revoke;
+                    if (revoke && !revoke.error && revoke.summary) {
+                        const hasApprovals = revoke.summary.totalApprovals > 0;
+                        const hasRisky = revoke.summary.hasRiskyApprovals;
+                        const approvalColor = hasRisky ? '#f85149' : hasApprovals ? '#f0883e' : '#3fb950';
+                        
+                        message += `<div style="margin-bottom: 16px;">`;
+                        message += `<div style="font-size: 1.1em; font-weight: 600; margin-bottom: 8px;">🔐 Approvals</div>`;
+                        message += `<div style="font-size: 0.9em; line-height: 1.6;">`;
+                        
+                        if (hasApprovals) {
+                            message += `<div style="color: ${approvalColor}; font-weight: 600; margin-bottom: 4px;">`;
+                            message += hasRisky ? '⚠️ Risky Approvals Found' : '⚡ Active Approvals';
+                            message += `</div>`;
+                            message += `<strong>Total:</strong> ${revoke.summary.totalApprovals}<br>`;
+                            if (revoke.summary.unlimitedApprovals > 0) {
+                                message += `<strong>Unlimited:</strong> ${revoke.summary.unlimitedApprovals}<br>`;
+                            }
+                            if (revoke.summary.oldApprovals > 0) {
+                                message += `<strong>Old:</strong> ${revoke.summary.oldApprovals}<br>`;
+                            }
+                            message += `<a href="${revoke.summary.revokeUrl}" target="_blank" style="color: #58a6ff; font-size: 0.85em;">Manage Approvals →</a>`;
+                        } else {
+                            message += `<div style="color: ${approvalColor}; font-weight: 600;">✅ No Approvals</div>`;
+                            message += `<div style="font-size: 0.85em; color: #8b949e; margin-top: 4px;">No token approvals found</div>`;
+                        }
+                        
+                        message += `</div></div>`;
+                    }
+                    
+                    message += `</div>`;
+                    message += `</div>`;
+                    
+                    // Show next steps AFTER all the data (always present)
+                    if (aiSummary.nextSteps && aiSummary.nextSteps.length > 0) {
+                        message += `<div style="margin-top: 16px; padding: 16px; background: rgba(0, 212, 255, 0.05); border: 1px solid rgba(0, 212, 255, 0.2); border-radius: 8px;">`;
+                        message += `<div style="font-weight: 600; margin-bottom: 10px; font-size: 1em; color: #00d4ff;">🎯 What's Next?</div>`;
+                        aiSummary.nextSteps.forEach(step => {
+                            message += `<div style="font-size: 0.9em; margin: 8px 0; line-height: 1.6; color: #c9d1d9;">${step}</div>`;
+                        });
+                        message += `</div>`;
+                    }
+                    
+                    addMessage('system', message);
+                } else {
+                    addMessage('system', '⚠️ Unable to fetch wallet data. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error fetching wallet data:', error);
+                addMessage('system', `⚠️ Error analyzing wallet. Type "audit my wallet" for security analysis.`);
+            }
+        }
+        // Listen for account changes
+        if (typeof window.ethereum !== 'undefined') {
+            window.ethereum.on('accountsChanged', (accounts) => {
+                const btn = document.getElementById('connectWalletBtn');
+                const status = document.getElementById('walletStatus');
+                
+                if (accounts.length === 0) {
+                    // User disconnected
+                    connectedWallet = null;
+                    btn.textContent = '🔗 Connect';
+                    btn.classList.remove('connected');
+                    status.textContent = '';
+                    addMessage('system', '👋 Wallet disconnected');
+                } else {
+                    // User switched accounts
+                    connectedWallet = accounts[0];
+                    const shortAddress = connectedWallet.slice(0, 6) + '...' + connectedWallet.slice(-4);
+                    btn.innerHTML = `✅ ${shortAddress}`;
+                    btn.classList.add('connected');
+                    status.innerHTML = `<span style="color: #3fb950;">Connected</span> • Click to disconnect`;
+                    addMessage('system', `🔄 Switched to ${shortAddress}`);
+                }
+            });
+            
+            window.ethereum.on('chainChanged', (chainId) => {
+                addMessage('system', `🔄 Network changed`);
+            });
+        }
+
+        function addMessage(type, content) {
+            const messagesDiv = document.getElementById('chatMessages');
+            if (!messagesDiv) return;
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ' + type;
+            if (type === 'system') {
+                messageDiv.innerHTML = '<div>' + formatMessage(content) + '</div>';
+            } else {
+                messageDiv.innerHTML = '<div class="message-label">' + (type === 'user' ? 'You' : 'Agent') + '</div><div>' + formatMessage(content) + '</div>';
+            }
+            messagesDiv.appendChild(messageDiv);
+            
+            // Force scroll to bottom
+            requestAnimationFrame(() => {
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            });
+            
+            setTimeout(() => {
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }, 50);
+        }
+
+        function getRoutingBadge(type) {
+            const badges = {
+                'url': '🔍 <strong>Phishing Scan</strong>',
+                'wallet_address': '🛡️ <strong>Wallet Audit</strong>',
+                'ens_domain': '🌐 <strong>ENS Security</strong>',
+                'transaction_hash': '🔎 <strong>Transaction Analysis</strong>',
+                'cve_query': '🔐 <strong>Vulnerability Search</strong>',
+                'generic_search': '🔍 <strong>Semantic Search</strong>'
+            };
+            return badges[type] || '🤖 <strong>Processing</strong>';
+        }
+
+        function formatMessage(content) {
+            // Simple formatting for JSON and code blocks
+            if (content.includes('{') && content.includes('}')) {
+                try {
+                    const jsonMatch = content.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) {
+                        const json = JSON.parse(jsonMatch[0]);
+                        return content.replace(jsonMatch[0], '<pre>' + JSON.stringify(json, null, 2) + '</pre>');
+                    }
+                } catch (e) {
+                    // Not valid JSON, continue
+                }
+            }
+            
+            // Convert markdown code blocks and inline code
+            const bt = String.fromCharCode(96);
+            const codeBlockRe = new RegExp(bt + bt + bt + '([\\s\\S]*?)' + bt + bt + bt, 'g');
+            content = content.replace(codeBlockRe, '<pre style="background: rgba(0, 212, 255, 0.1); border: 1px solid rgba(0, 212, 255, 0.3); padding: 10px; border-radius: 4px; overflow-x: auto; margin: 10px 0;"><code>$1</code></pre>');
+            const inlineCodeRe = new RegExp(bt + '([^' + bt + ']+)' + bt, 'g');
+            content = content.replace(inlineCodeRe, function(match, code) {
+                // Highlight A2A flow indicators with green background
+                if (code.indexOf('->') !== -1 || code.indexOf('Agent') !== -1 || code.indexOf('User') !== -1) {
+                    return '<code style="background: rgba(0, 255, 136, 0.2); padding: 2px 6px; border-radius: 3px; color: #00ff88; font-weight: bold; border: 1px solid rgba(0, 255, 136, 0.4);">' + code + '</code>';
+                }
+                return '<code style="background: rgba(0, 255, 255, 0.1); padding: 2px 4px; border-radius: 3px;">' + code + '</code>';
+            });
+            
+            // Convert markdown links [text](url) to HTML hyperlinks
+            content = content.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color: #00d4ff; text-decoration: underline; cursor: pointer;">$1</a>');
+            
+            // Convert markdown bold **text** to HTML
+            content = content.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            
+            // Convert markdown italic *text* to HTML
+            content = content.replace(/(^|[^*])\*([^*]+)\*([^*]|$)/g, '$1<em>$2</em>$3');
+            
+            // Convert markdown headers
+            content = content.replace(/^### (.*$)/gm, '<h3>$1</h3>');
+            content = content.replace(/^## (.*$)/gm, '<h2>$1</h2>');
+            content = content.replace(/^# (.*$)/gm, '<h1>$1</h1>');
+            
+            // Convert markdown lists
+            content = content.replace(/^- (.*$)/gm, '<li>$1</li>');
+            
+            // Convert line breaks
+            content = content.replace(/\n/g, '<br>');
+            
+            return content;
+        }
+    </script>
+
+    <footer style="text-align: center; padding: 30px 20px; background: rgba(0, 0, 0, 0.3); border-top: 1px solid rgba(0, 212, 255, 0.2); margin-top: 40px;">
+        <div style="font-size: 0.9em; font-family: 'Courier New', monospace;">
+            Built with 
+            <a href="https://kiro.dev" target="_blank" style="color: #00d4ff; text-decoration: none; border-bottom: 1px dotted rgba(0, 212, 255, 0.4);">Kiro</a>
+            | Made by 
+            <a href="https://github.com/edwardtay" target="_blank" style="color: #00d4ff; text-decoration: none; border-bottom: 1px dotted rgba(0, 212, 255, 0.4);">Edward</a>
+        </div>
+    </footer>
+</body>
+</html>
+
