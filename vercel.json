@@ -1,46 +1,16 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "functions": {
-    "api/index.js": {
-      "memory": 1024,
-      "maxDuration": 30
-    }
-  },
-  "routes": [
+  "builds": [
     {
-      "src": "/api/resolve-ens",
-      "methods": ["POST", "OPTIONS"],
-      "dest": "/api/index"
-    },
-    {
-      "src": "/api/wallet/analyze",
-      "methods": ["POST", "OPTIONS"],
-      "dest": "/api/index"
-    },
-    {
-      "src": "/api/transaction/prevent-threats",
-      "methods": ["POST", "OPTIONS"],
-      "dest": "/api/index"
-    },
-    {
-      "src": "/api/chat",
-      "methods": ["POST", "OPTIONS"],
-      "dest": "/api/index"
-    },
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/index"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/api/index"
+      "src": "api/index.ts",
+      "use": "@vercel/node"
     }
   ],
-  "env": {
-    "NODE_ENV": "production",
-    "SERVE_FRONTEND": "true"
-  }
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.ts"
+    }
+  ]
 }
 
