@@ -3,7 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web3Base - AI Security Agent</title>
+    <title>Web3Base - AI Security Agent for Web3</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+    
+    <!-- Meta Tags for Social Sharing -->
+    <meta name="description" content="AI-powered security agent for Web3. Analyze wallets, detect threats, and monitor blockchain security in real-time.">
+    <meta name="keywords" content="web3, blockchain, security, AI, wallet analysis, crypto security">
+    <meta name="author" content="Web3Base">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://web3base.com/">
+    <meta property="og:title" content="Web3Base - AI Security Agent for Web3">
+    <meta property="og:description" content="AI-powered security agent for Web3. Analyze wallets, detect threats, and monitor blockchain security in real-time.">
+    <meta property="og:image" content="https://web3base.com/og-image.png">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://web3base.com/">
+    <meta property="twitter:title" content="Web3Base - AI Security Agent for Web3">
+    <meta property="twitter:description" content="AI-powered security agent for Web3. Analyze wallets, detect threats, and monitor blockchain security in real-time.">
+    <meta property="twitter:image" content="https://web3base.com/og-image.png">
+    
     <style>
         * {
             margin: 0;
@@ -603,6 +626,107 @@
             color: #a0d0ff;
             font-family: 'Courier New', monospace;
         }
+        
+        /* Timestamp styles */
+        .message-timestamp {
+            font-size: 0.75em;
+            color: #6e7681;
+            margin-top: 4px;
+            font-style: italic;
+        }
+        
+        /* Clear chat button */
+        .clear-chat-btn {
+            padding: 8px 16px;
+            background: rgba(248, 81, 73, 0.1);
+            border: 1px solid rgba(248, 81, 73, 0.3);
+            border-radius: 6px;
+            color: #f85149;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        }
+        .clear-chat-btn:hover {
+            background: rgba(248, 81, 73, 0.2);
+            border-color: rgba(248, 81, 73, 0.5);
+            transform: translateY(-1px);
+        }
+        
+        /* Example queries */
+        .example-queries {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+            justify-content: center;
+        }
+        .example-query-btn {
+            padding: 6px 12px;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 16px;
+            color: #00d4ff;
+            cursor: pointer;
+            font-size: 0.8em;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        .example-query-btn:hover {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: rgba(0, 212, 255, 0.5);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 212, 255, 0.3);
+        }
+        
+        /* API Status indicators */
+        .api-status-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .api-status {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.75em;
+            color: #8b949e;
+            padding: 4px 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .api-status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        .api-status-dot.online {
+            background: #3fb950;
+            box-shadow: 0 0 6px rgba(63, 185, 80, 0.5);
+        }
+        .api-status-dot.offline {
+            background: #f85149;
+            box-shadow: 0 0 6px rgba(248, 81, 73, 0.5);
+        }
+        .api-status-dot.checking {
+            background: #f0883e;
+            box-shadow: 0 0 6px rgba(240, 136, 62, 0.5);
+        }
+        
+        /* Chat header with clear button */
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
     </style>
 </head>
 <body>
@@ -610,7 +734,7 @@
         <div class="header">
             <div class="info-icon" onclick="openInfoModal()" title="About Web3Base" style="position: absolute; top: 20px; right: 20px;">ℹ</div>
             <h1>🛡️ Web3Base</h1>
-            <p>Your AI Security Agent for Web3</p>
+            <p>AI-Powered Wallet Analysis & Security Assistant</p>
             
             <!-- Compact Wallet Input -->
             <div style="margin-top: 20px; max-width: 600px; margin-left: auto; margin-right: auto;">
@@ -649,83 +773,64 @@
                 <div class="modal-body">
                     <h3>Overview</h3>
                     <p>
-                        Web3Base is your AI-powered security agent for Web3. Built with <strong>AgentKit</strong>, 
-                        it provides intelligent security analysis, threat detection, and monitoring for wallets, transactions, projects, and blockchain infrastructure.
+                        Web3Base is an AI-powered security agent for Web3. Built with <strong>Coinbase AgentKit</strong> and <strong>LangChain</strong>, 
+                        it provides intelligent wallet analysis, ENS resolution, and conversational security assistance.
                     </p>
                     
-                    <h3>🛡️ Security Features</h3>
+                    <h3>✅ Available Features</h3>
                     <ul>
-                        <li><strong>🔍 Web Security</strong> - Phishing detection, CVE search, threat intelligence</li>
-                        <li><strong>🛡️ Wallet Security</strong> - Multi-chain wallet analysis, ENS resolution, USDC monitoring</li>
-                        <li><strong>🔎 Transaction Security</strong> - TX analysis, cross-chain verification, risk scoring</li>
-                        <li><strong>✅ Project Intelligence</strong> - Audit verification, rug pull detection, team checks</li>
-                        <li><strong>📊 Infrastructure Monitoring</strong> - Network health, node status, blockchain metrics</li>
-                        <li><strong>🤖 AI-Powered</strong> - Autonomous learning with Letta, real-time intelligence via Exa MCP</li>
+                        <li><strong>💬 AI Chat Assistant</strong> - Ask security questions and get intelligent responses</li>
+                        <li><strong>🔍 ENS Resolution</strong> - Resolve .eth names to wallet addresses</li>
+                        <li><strong>🛡️ Wallet Analysis</strong> - Comprehensive analysis using Moralis, Blockscout, Alchemy, Thirdweb, Revoke.cash, Nansen, MetaSleuth, and Passport</li>
+                        <li><strong>🔎 Transaction Prevention</strong> - Pre-transaction threat analysis and risk scoring</li>
+                        <li><strong>🌐 Web Search</strong> - Real-time intelligence via Exa MCP for CVE and security research</li>
                     </ul>
                     
                     <h3>Technology Stack</h3>
                     <ul>
-                        <li><strong>AgentKit</strong> - Coinbase's framework for building AI agents</li>
-                        <li><strong>MCP (Model Context Protocol)</strong> - For tool integration and agent coordination</li>
-                        <li><strong>A2A Coordination</strong> - Automatic agent-to-agent communication for complex tasks</li>
-                        <li><strong>Exa Search</strong> - Advanced semantic web search capabilities</li>
-                        <li><strong>Letta</strong> - Autonomous learning platform for continuous self-improvement</li>
+                        <li><strong>Coinbase AgentKit</strong> - Framework for building AI agents with blockchain capabilities</li>
+                        <li><strong>LangChain</strong> - AI orchestration and conversation management</li>
+                        <li><strong>OpenAI GPT-4</strong> - Natural language understanding and generation</li>
+                        <li><strong>Exa MCP</strong> - Model Context Protocol for semantic web search</li>
+                        <li><strong>Express.js</strong> - Backend API server with security middleware</li>
                     </ul>
                     
-                    <h3>� Blockc-hain Data Sources</h3>
-                    <p>WebWatcher analyzes security threats using data from leading Web3 platforms:</p>
+                    <h3>🔗 Integrated Data Sources</h3>
                     <ul>
-                        <li><strong>🔵 Circle</strong> - USDC Stablecoin Platform: Access USDC transaction data, wallet balances, and payment flows for fraud detection</li>
-                        <li><strong>🔗 ZetaChain</strong> - Universal Blockchain: Query cross-chain transactions, verify bridge operations, track multi-chain assets</li>
-                        <li><strong>✅ Seedify</strong> - Web3 Launchpad: Check project audit status, team verification, and legitimacy indicators</li>
-                        <li><strong>⚡ Somnia</strong> - High-Performance Blockchain: Access real-time blockchain metrics, transaction patterns, and network health data</li>
-                        <li><strong>🖥️ NodeOps</strong> - Node Infrastructure: Monitor validator node health, uptime statistics, and infrastructure status</li>
+                        <li><strong>Moralis</strong> - Wallet security analysis and transaction history</li>
+                        <li><strong>Blockscout</strong> - Blockchain explorer data and address verification</li>
+                        <li><strong>Alchemy</strong> - Token balances and NFT holdings</li>
+                        <li><strong>Thirdweb</strong> - Wallet portfolio and asset tracking</li>
+                        <li><strong>Revoke.cash</strong> - Token approval security and recommendations</li>
+                        <li><strong>Nansen</strong> - Wallet intelligence and labeling</li>
+                        <li><strong>MetaSleuth</strong> - Address risk scoring and analysis</li>
+                        <li><strong>Gitcoin Passport</strong> - Identity verification and trust scores</li>
                     </ul>
                     
-                    <h3>🤖 AI-Powered Security Analysis</h3>
-                    <p>Web3Base uses AI to analyze data from multiple sources:</p>
+                    <h3>How to Use</h3>
+                    <p><strong>Wallet Analysis:</strong></p>
                     <ul>
-                        <li><strong>Wallet Analysis</strong>: Checks USDC holdings (Circle), cross-chain activity (ZetaChain), on-chain behavior (Somnia)</li>
-                        <li><strong>Transaction Verification</strong>: Analyzes payment flows, cross-chain transfers, and transaction patterns</li>
-                        <li><strong>Project Vetting</strong>: Reviews audit status (Seedify), treasury holdings (Circle), deployment verification (ZetaChain)</li>
-                        <li><strong>Infrastructure Monitoring</strong>: Tracks node health (NodeOps), network performance (Somnia)</li>
+                        <li>Enter a wallet address (0x...) or ENS name (vitalik.eth) in the input field</li>
+                        <li>Click "Analyze" to get comprehensive security analysis</li>
+                        <li>View data from 8 different blockchain security providers</li>
                     </ul>
                     
-                    <h3>How It Works - Autonomous & Intelligent</h3>
-                    <p>
-                        Web3Base uses <strong>autonomous multi-agent coordination</strong> to analyze security threats. 
-                        When you provide a URL (no "scan" command needed), multiple specialized agents work together automatically:
-                    </p>
+                    <p><strong>AI Chat:</strong></p>
                     <ul>
-                        <li><code>UrlFeatureAgent</code> extracts URL features and patterns</li>
-                        <li><code>UrlScanAgent</code> performs real-time security scan via urlscan.io</li>
-                        <li><code>PhishingRedFlagAgent</code> analyzes features for phishing indicators</li>
-                        <li>Results are automatically coordinated via <strong>A2A protocol</strong></li>
-                        <li>Every interaction is <strong>learned by Letta</strong> for continuous improvement</li>
+                        <li>Type questions in the chat input at the bottom</li>
+                        <li>Ask about security topics, CVEs, or blockchain concepts</li>
+                        <li>Get real-time answers powered by Exa search and GPT-4</li>
                     </ul>
                     
-                    <h3>Autonomous Capabilities</h3>
+                    <h3>Example Queries</h3>
                     <ul>
-                        <li><strong>Automatic URL Detection</strong>: Type any URL - agent automatically scans (no "scan" command needed)</li>
-                        <li><strong>Real-Time Intelligence</strong>: Uses Exa MCP for latest CVE/threat data (not cached)</li>
-                        <li><strong>Multi-Agent Coordination</strong>: Automatically coordinates with specialized agents</li>
-                        <li><strong>Self-Improving</strong>: Learns from every interaction, gets smarter over time</li>
-                        <li><strong>Risk-Based Escalation</strong>: High-risk findings automatically escalate to triage agents</li>
-                    </ul>
-                    
-                    <h3>Usage</h3>
-                    <p>
-                        Simply type your security questions or use the quick action buttons above the input field. 
-                        Try commands like:
-                    </p>
-                    <ul>
-                        <li>"edwardtay.com" - Automatically scans (no "scan" command needed)</li>
-                        <li>"search CVE log4j" - Find latest vulnerability information</li>
-                        <li>"analyze transaction 0x..." - Analyze blockchain transactions</li>
+                        <li>"What are the latest Ethereum security vulnerabilities?"</li>
+                        <li>"Explain how to protect against phishing attacks"</li>
+                        <li>"What is a reentrancy attack?"</li>
                     </ul>
                     
                     <p style="margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.08); color: #8b949e; font-size: 0.9em;">
-                        Built with <strong>Kiro</strong> | Made by <strong>Edward</strong>
+                        Built with <strong>Kiro AI</strong> | Powered by <strong>Coinbase AgentKit</strong>
                     </p>
                 </div>
             </div>
@@ -734,6 +839,38 @@
             <!-- Chat View -->
             <div id="chatView" class="dashboard-view active">
                 <div class="chat-section">
+                <!-- Chat Header with Clear Button -->
+                <div class="chat-header">
+                    <h2 style="margin: 0;">💬 Security Chat</h2>
+                    <button class="clear-chat-btn" onclick="clearChat()" title="Clear chat history (Esc)">
+                        🗑️ Clear Chat
+                    </button>
+                </div>
+                
+                <!-- API Status Indicators -->
+                <div class="api-status-container">
+                    <div class="api-status">
+                        <span class="api-status-dot checking" id="apiStatusDot"></span>
+                        <span id="apiStatusText">Checking API...</span>
+                    </div>
+                </div>
+                
+                <!-- Example Queries -->
+                <div class="example-queries">
+                    <button class="example-query-btn" onclick="setExampleQuery('vitalik.eth')">
+                        🔍 Analyze vitalik.eth
+                    </button>
+                    <button class="example-query-btn" onclick="setExampleQuery('0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb')">
+                        🛡️ Check Wallet
+                    </button>
+                    <button class="example-query-btn" onclick="setExampleQuery('What are the latest Web3 security threats?')">
+                        ⚠️ Latest Threats
+                    </button>
+                    <button class="example-query-btn" onclick="setExampleQuery('How do I protect my wallet?')">
+                        💡 Security Tips
+                    </button>
+                </div>
+                
                 <div class="chat-messages" id="chatMessages">
                 </div>
                 <div class="chat-input">
@@ -897,12 +1034,80 @@
             }
         }
 
-        // Close modal on Escape key
+        // Keyboard shortcuts
         document.addEventListener('keydown', function(event) {
+            // Escape key - Close modal or clear chat
             if (event.key === 'Escape') {
-                closeInfoModal(event);
+                const modal = document.getElementById('infoModal');
+                if (modal && modal.classList.contains('active')) {
+                    closeInfoModal(event);
+                } else {
+                    // Clear chat if modal is not open
+                    const input = document.getElementById('messageInput');
+                    if (input && document.activeElement === input && input.value) {
+                        // If typing, just clear input
+                        input.value = '';
+                    } else {
+                        // Otherwise clear entire chat
+                        clearChat();
+                    }
+                }
             }
         });
+        
+        // Clear chat function
+        function clearChat() {
+            const messagesDiv = document.getElementById('chatMessages');
+            if (messagesDiv) {
+                if (confirm('Clear all chat messages?')) {
+                    messagesDiv.innerHTML = '';
+                    addMessage('system', '✨ Chat cleared. How can I help you with Web3 security?');
+                }
+            }
+        }
+        
+        // Set example query
+        function setExampleQuery(query) {
+            const input = document.getElementById('messageInput');
+            if (input) {
+                input.value = query;
+                input.focus();
+            }
+        }
+        
+        // Check API status
+        async function checkApiStatus() {
+            const statusDot = document.getElementById('apiStatusDot');
+            const statusText = document.getElementById('apiStatusText');
+            
+            if (!statusDot || !statusText) return;
+            
+            try {
+                statusDot.className = 'api-status-dot checking';
+                statusText.textContent = 'Checking API...';
+                
+                const response = await fetch(API_BASE_URL + '/health', {
+                    method: 'GET',
+                    signal: AbortSignal.timeout(5000) // 5 second timeout
+                });
+                
+                if (response.ok) {
+                    statusDot.className = 'api-status-dot online';
+                    statusText.textContent = 'API Online';
+                } else {
+                    statusDot.className = 'api-status-dot offline';
+                    statusText.textContent = 'API Error';
+                }
+            } catch (error) {
+                statusDot.className = 'api-status-dot offline';
+                statusText.textContent = 'API Offline';
+                console.error('API health check failed:', error);
+            }
+        }
+        
+        // Check API status on load and every 30 seconds
+        checkApiStatus();
+        setInterval(checkApiStatus, 30000);
 
         let loadingMessageId = null;
 
@@ -1849,10 +2054,15 @@
             
             const messageDiv = document.createElement('div');
             messageDiv.className = 'message ' + type;
+            
+            // Get current timestamp
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            
             if (type === 'system') {
-                messageDiv.innerHTML = '<div>' + formatMessage(content) + '</div>';
+                messageDiv.innerHTML = '<div>' + formatMessage(content) + '</div><div class="message-timestamp">' + timeString + '</div>';
             } else {
-                messageDiv.innerHTML = '<div class="message-label">' + (type === 'user' ? 'You' : 'Agent') + '</div><div>' + formatMessage(content) + '</div>';
+                messageDiv.innerHTML = '<div class="message-label">' + (type === 'user' ? 'You' : 'Agent') + '</div><div>' + formatMessage(content) + '</div><div class="message-timestamp">' + timeString + '</div>';
             }
             messagesDiv.appendChild(messageDiv);
             

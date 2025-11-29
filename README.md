@@ -1,29 +1,22 @@
 # 🔒 Web3Base - AI Security Agent for Web3
 
-**Web3Base** is an advanced, **autonomous AI security agent** that solves real-world Web3 security threats through intelligent multi-agent coordination, real-time threat intelligence, and continuous self-improvement.
+**Web3Base** is an AI-powered security assistant for Web3 that provides wallet analysis, ENS resolution, and conversational security assistance using Coinbase AgentKit and LangChain.
 
-## 🎯 What Makes Web3Base Unique
+## 🎯 What Web3Base Does
 
-### **First-of-its-Kind Integration
-- **AgentKit** (Coinbase) + **VeriSense** + **Letta** (autonomous learning) + **A2A/MCP protocols**
-- The only agent combining all these technologies for truly autonomous cybersecurity
+### Core Features
+- **AI Chat Assistant**: Ask security questions and get intelligent responses powered by GPT-4
+- **ENS Resolution**: Resolve .eth domain names to wallet addresses
+- **Wallet Analysis**: Comprehensive security analysis using 8 blockchain data providers
+- **Transaction Prevention**: Pre-transaction threat analysis and risk scoring
+- **Web Search**: Real-time security intelligence via Exa MCP
 
-### 🤖 Truly Autonomous
-- **Acts without explicit commands**: Detects URLs automatically, no "scan" keyword needed
-- **Self-improving**: Learns from every interaction via Letta
-- **Proactive**: Escalates threats automatically, coordinates agents independently
-- **Real-time intelligence**: Uses Exa MCP for latest threat data (not cached)
-
-### 🧠 Intelligent Multi-Agent Coordination
-- Automatically coordinates with specialized agents (UrlFeatureAgent, UrlScanAgent, PhishingRedFlagAgent)
-- A2A protocol enables seamless agent-to-agent communication
-- Risk-based escalation: High-risk findings → Auto-coordinate with triage/fix agents
-
-### 📈 Continuous Learning
-- Every interaction stored in Letta's long-term memory
-- Risk scoring improves over time
-- Remembers successful remediation strategies
-- Gets smarter without manual updates
+### Technology Stack
+- **Coinbase AgentKit**: Framework for building AI agents with blockchain capabilities
+- **LangChain**: AI orchestration and conversation management
+- **OpenAI GPT-4**: Natural language understanding and generation
+- **Exa MCP**: Model Context Protocol for semantic web search
+- **Express.js**: Backend API server with security middleware
 
 ## 🎯 Features
 
@@ -362,117 +355,35 @@ This project follows a modular and extensible architecture. When contributing:
 
 Apache-2.0
 
-## 🛡️ Multi-Layer Security Architecture
+## 🔗 Integrated Data Sources
 
-Web3Base is a **comprehensive Web3 security platform** that integrates 5 specialized security layers to provide complete threat detection and monitoring across the blockchain ecosystem.
+Web3Base aggregates security data from multiple blockchain providers:
 
-### Security Layers
+- **Moralis**: Wallet security analysis and transaction history
+- **Blockscout**: Blockchain explorer data and address verification
+- **Alchemy**: Token balances and NFT holdings
+- **Thirdweb**: Wallet portfolio and asset tracking
+- **Revoke.cash**: Token approval security and recommendations
+- **Nansen**: Wallet intelligence and labeling
+- **MetaSleuth**: Address risk scoring and analysis
+- **Gitcoin Passport**: Identity verification and trust scores
 
-#### 🔵 **[Circle](https://www.circle.com/)** - Payment Security Layer
-**Role**: Stablecoin transaction monitoring and wallet risk assessment
+### Example Workflows
 
-**Security Capabilities**:
-- Monitor USDC transactions for suspicious patterns
-- Verify wallet addresses before large transfers  
-- Detect compromised wallets with unusual movements
-- Track payment flows for fraud detection
-
-**Example**: `"Audit wallet 0x123... for suspicious USDC activity"`
-
----
-
-#### 🔗 **[ZetaChain](https://www.zetachain.com/)** - Cross-Chain Security Layer
-**Role**: Universal blockchain monitoring and cross-chain attack detection
-
-**Security Capabilities**:
-- Monitor cross-chain bridges for exploits
-- Verify cross-chain message integrity
-- Detect cross-chain MEV attacks
-- Track assets across multiple chains
-
-**Example**: `"Verify cross-chain transaction 0xabc... is safe"`
-
----
-
-#### ✅ **[Seedify](https://seedify.fund/)** - Project Security & Due Diligence Layer
-**Role**: Web3 project vetting and smart contract audit verification
-
-**Security Capabilities**:
-- Verify project audit status before investment
-- Check launchpad project legitimacy
-- Detect rug pull risks in new projects
-- Track project security scores over time
-
-**Example**: `"Is project XYZ safe to invest in?"`
-
----
-
-#### ⚡ **[Somnia](https://somnia.network/)** - High-Performance Monitoring Layer
-**Role**: Real-time blockchain infrastructure monitoring and performance analysis
-
-**Security Capabilities**:
-- Detect network congestion attacks (DDoS)
-- Monitor for unusual transaction patterns
-- Track network health for security incidents
-- Identify performance degradation from attacks
-
-**Example**: `"Is the network under attack?"`
-
----
-
-#### 🖥️ **[NodeOps](https://nodeops.xyz/)** - Infrastructure Security Layer
-**Role**: Node infrastructure monitoring and validator security
-
-**Security Capabilities**:
-- Monitor validator node health
-- Detect compromised nodes
-- Track node uptime for security SLAs
-- Alert on node infrastructure failures
-
-**Example**: `"Check if my validator node is secure"`
-
----
-
-### 🎯 Unified Security Workflows
-
-Web3Base orchestrates all partners to deliver comprehensive security analysis:
-
-**Comprehensive Wallet Audit**:
+**Wallet Security Analysis**:
 ```
-"Audit wallet 0x123... for security risks"
-
-→ Circle: Check USDC balance and transaction patterns
-→ ZetaChain: Verify cross-chain interactions
-→ Seedify: Check interactions with risky projects
-→ Somnia: Analyze on-chain transaction patterns
-→ NodeOps: Verify validator status (if applicable)
-
-Result: Complete security report with risk score
+Enter wallet address or ENS name → Click "Analyze"
+→ Fetches data from all 8 providers in parallel
+→ Displays comprehensive security report
+→ Shows token approvals, risk scores, and recommendations
 ```
 
-**Cross-Chain Transaction Security**:
+**AI Security Assistant**:
 ```
-"Verify cross-chain transfer from Ethereum to Base"
-
-→ ZetaChain: Verify message integrity
-→ Circle: Check USDC amounts match
-→ Somnia: Monitor both chains for anomalies
-→ NodeOps: Verify bridge node health
-
-Result: Transaction verified safe or flagged
-```
-
-**Project Investment Due Diligence**:
-```
-"Should I invest in project XYZ?"
-
-→ Seedify: Get audit status and verification
-→ Circle: Check project treasury holdings
-→ ZetaChain: Verify cross-chain deployments
-→ Somnia: Analyze on-chain activity
-→ Exa MCP: Search for security incidents
-
-Result: Investment risk assessment
+Ask: "What are the latest Ethereum security vulnerabilities?"
+→ Uses Exa MCP to search for recent CVEs and threats
+→ GPT-4 analyzes and summarizes findings
+→ Returns actionable security insights
 ```
 
 ## 🙏 Acknowledgments
