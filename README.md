@@ -1,8 +1,8 @@
-# 🔒 WebWatcher - Autonomous Cybersecurity Agent
+# 🔒 Web3Base - AI Security Agent for Web3
 
-**WebWatcher** is an advanced, **autonomous cybersecurity agent** that solves real-world security threats through intelligent multi-agent coordination, real-time threat intelligence, and continuous self-improvement.
+**Web3Base** is an advanced, **autonomous AI security agent** that solves real-world Web3 security threats through intelligent multi-agent coordination, real-time threat intelligence, and continuous self-improvement.
 
-## 🎯 What Makes WebWatcher Unique
+## 🎯 What Makes Web3Base Unique
 
 ### **First-of-its-Kind Integration
 - **AgentKit** (Coinbase) + **VeriSense** + **Letta** (autonomous learning) + **A2A/MCP protocols**
@@ -66,8 +66,8 @@
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
-cd verisense-agentkit
+git clone https://github.com/edwardtay/web3base.git
+cd web3base
 ```
 
 2. Install dependencies:
@@ -195,7 +195,7 @@ Get comprehensive security summary:
 ## 🏗️ Architecture
 
 ```
-verisense-agentkit/
+web3base/
 ├── src/
 │   ├── action-providers/
 │   │   └── security.ts          # Custom security action provider
@@ -364,7 +364,7 @@ Apache-2.0
 
 ## 🛡️ Multi-Layer Security Architecture
 
-WebWatcher is a **comprehensive Web3 security platform** that integrates 5 specialized security layers to provide complete threat detection and monitoring across the blockchain ecosystem.
+Web3Base is a **comprehensive Web3 security platform** that integrates 5 specialized security layers to provide complete threat detection and monitoring across the blockchain ecosystem.
 
 ### Security Layers
 
@@ -435,7 +435,7 @@ WebWatcher is a **comprehensive Web3 security platform** that integrates 5 speci
 
 ### 🎯 Unified Security Workflows
 
-WebWatcher orchestrates all partners to deliver comprehensive security analysis:
+Web3Base orchestrates all partners to deliver comprehensive security analysis:
 
 **Comprehensive Wallet Audit**:
 ```

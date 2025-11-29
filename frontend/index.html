@@ -840,6 +840,8 @@
                 ? window.__API_URL__   // Vercel: use injected API_URL
                 : 'https://webwatcher.lever-labs.com';  // Fallback to Cloud Run
         
+        console.log('🚀 Web3Base loaded - API:', API_BASE_URL);
+        
         let threadId = 'web-' + Date.now();
         
         // Check Letta status on page load (only show if enabled)
