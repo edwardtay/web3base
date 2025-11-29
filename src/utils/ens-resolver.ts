@@ -16,23 +16,47 @@ export async function resolveENS(ensDomain: string): Promise<string | null> {
     // Normalize ENS name
     const normalizedName = ensDomain.toLowerCase().trim();
     
-    // Method 1: Use Cloudflare's ENS gateway (most reliable, no API key needed)
-    try {
-      const response = await fetch(`https://cloudflare-eth.com/v1/mainnet/ens/resolve/${normalizedName}`, {
-        headers: {
-          'Accept': 'application/json',
-        },
-      });
-      
-      if (response.ok) {
-        const data = await response.json() as { address?: string };
-        if (data.address && data.address.startsWith('0x') && data.address.length === 42) {
-          logger.info(`[ENS] Resolved ${ensDomain} -> ${data.address} (via Cloudflare)`);
-          return data.address;
+    // Method 1: Use Alchemy's ENS resolution (most reliable if API key available)
+    const alchemyKey = process.env.ALCHEMY_API_KEY;
+    if (alchemyKey) {
+      try {
+        const response = await fetch(
+          `https://eth-mainnet.g.alchemy.com/v2/${alchemyKey}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              jsonrpc: '2.0',
+              method: 'eth_call',
+              params: [
+                {
+                  to: '0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e', // ENS Registry
+                  data: '0x0178b8bf' + normalizedName.split('.')[0].padEnd(64, '0'), // resolver(bytes32)
+                },
+                'latest'
+              ],
+              id: 1,
+            }),
+          }
+        );
+        
+        if (response.ok) {
+          const text = await response.text();
+          try {
+            const data = JSON.parse(text) as { result?: string };
+            if (data.result && data.result.startsWith('0x') && data.result.length === 42) {
+              logger.info(`[ENS] Resolved ${ensDomain} -> ${data.result} (via Alchemy)`);
+              return data.result;
+            }
+          } catch (e) {
+            logger.debug(`[ENS] Alchemy returned non-JSON response`);
+          }
         }
+      } catch (error) {
+        logger.debug(`[ENS] Alchemy resolution failed:`, error);
       }
-    } catch (error) {
-      logger.debug(`[ENS] Cloudflare resolution failed:`, error);
     }
     
     // Method 2: Use ENS.domains API (public, no key needed)
@@ -44,10 +68,15 @@ export async function resolveENS(ensDomain: string): Promise<string | null> {
       });
       
       if (response.ok) {
-        const data = await response.json() as { address?: string };
-        if (data.address && data.address.startsWith('0x') && data.address.length === 42) {
-          logger.info(`[ENS] Resolved ${ensDomain} -> ${data.address} (via ENS API)`);
-          return data.address;
+        const text = await response.text();
+        try {
+          const data = JSON.parse(text) as { address?: string };
+          if (data.address && data.address.startsWith('0x') && data.address.length === 42) {
+            logger.info(`[ENS] Resolved ${ensDomain} -> ${data.address} (via ENS API)`);
+            return data.address;
+          }
+        } catch (e) {
+          logger.debug(`[ENS] ENS API returned non-JSON response`);
         }
       }
     } catch (error) {
@@ -79,36 +108,29 @@ export async function resolveENS(ensDomain: string): Promise<string | null> {
       }
     }
     
-    // Method 4: Use Alchemy's ENS resolution (if API key available)
-    const alchemyKey = process.env.ALCHEMY_API_KEY;
-    if (alchemyKey) {
-      try {
-        const response = await fetch(
-          `https://eth-mainnet.g.alchemy.com/v2/${alchemyKey}`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              jsonrpc: '2.0',
-              method: 'alchemy_resolveEns',
-              params: [normalizedName],
-              id: 1,
-            }),
+    // Method 4: Use simple public ENS resolver API
+    try {
+      const response = await fetch(`https://api.web3.bio/profile/ens/${normalizedName}`, {
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        const text = await response.text();
+        try {
+          const data = JSON.parse(text) as { address?: string; ethereum?: { address?: string } };
+          const address = data.address || data.ethereum?.address;
+          if (address && address.startsWith('0x') && address.length === 42) {
+            logger.info(`[ENS] Resolved ${ensDomain} -> ${address} (via Web3.bio)`);
+            return address;
           }
-        );
-        
-        if (response.ok) {
-          const data = await response.json() as { result?: string };
-          if (data.result && data.result.startsWith('0x') && data.result.length === 42) {
-            logger.info(`[ENS] Resolved ${ensDomain} -> ${data.result} (via Alchemy)`);
-            return data.result;
-          }
+        } catch (e) {
+          logger.debug(`[ENS] Web3.bio returned non-JSON response`);
         }
-      } catch (error) {
-        logger.debug(`[ENS] Alchemy resolution failed:`, error);
       }
+    } catch (error) {
+      logger.debug(`[ENS] Web3.bio resolution failed:`, error);
     }
     
     logger.warn(`[ENS] Could not resolve ${ensDomain} using any method`);
