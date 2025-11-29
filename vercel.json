@@ -2,14 +2,40 @@
   "version": 2,
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "rewrites": [
+  "functions": {
+    "api/index.js": {
+      "memory": 1024,
+      "maxDuration": 30
+    }
+  },
+  "routes": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/index"
+      "src": "/api/resolve-ens",
+      "methods": ["POST", "OPTIONS"],
+      "dest": "/api/index"
     },
     {
-      "source": "/(.*)",
-      "destination": "/api/index"
+      "src": "/api/wallet/analyze",
+      "methods": ["POST", "OPTIONS"],
+      "dest": "/api/index"
+    },
+    {
+      "src": "/api/transaction/prevent-threats",
+      "methods": ["POST", "OPTIONS"],
+      "dest": "/api/index"
+    },
+    {
+      "src": "/api/chat",
+      "methods": ["POST", "OPTIONS"],
+      "dest": "/api/index"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/index"
     }
   ],
   "env": {
