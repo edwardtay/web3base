@@ -13,12 +13,13 @@ import { logger } from '../utils/logger';
  * Helmet configuration for security headers
  */
 export const helmetMiddleware = helmet({
-  contentSecurityPolicy: {
+  contentSecurityPolicy: process.env.NODE_ENV === 'development' ? false : {
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", 'data:', 'https:'],
+      connectSrc: ["'self'", 'http://localhost:8080', 'http://localhost:3000'],
     },
   },
   hsts: {

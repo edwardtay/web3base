@@ -627,7 +627,7 @@
                         onkeypress="if(event.key==='Enter') analyzeManualAddress()"
                     />
                     <button 
-                        onclick="analyzeManualAddress()" 
+                        onclick="console.log('Button clicked!'); analyzeManualAddress()" 
                         style="padding: 12px 20px; background: linear-gradient(135deg, #238636 0%, #2ea043 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; white-space: nowrap; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(35, 134, 54, 0.25);"
                         onmouseover="this.style.background='linear-gradient(135deg, #2ea043 0%, #3fb950 100%)'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(35, 134, 54, 0.35)';"
                         onmouseout="this.style.background='linear-gradient(135deg, #238636 0%, #2ea043 100%)'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(35, 134, 54, 0.25)';"
@@ -835,12 +835,13 @@
         // Localhost automatically uses local backend, production uses Cloud Run
         const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         const API_BASE_URL = isLocalhost
-            ? 'http://localhost:8080'  // Localhost always uses local backend
+            ? 'http://localhost:9000'  // Localhost always uses local backend
             : (typeof window !== 'undefined' && window.__API_URL__) 
                 ? window.__API_URL__   // Vercel: use injected API_URL
                 : 'https://webwatcher.lever-labs.com';  // Fallback to Cloud Run
         
         console.log('🚀 Web3Base loaded - API:', API_BASE_URL);
+        console.log('🔧 Environment:', { isLocalhost, hostname: window.location.hostname });
         
         let threadId = 'web-' + Date.now();
         
@@ -1363,12 +1364,15 @@
         
         // Analyze manually entered address (supports ENS)
         async function analyzeManualAddress() {
+            console.log('🔍 analyzeManualAddress called');
             const input = document.getElementById('manualAddressInput');
             const status = document.getElementById('walletStatus');
             let inputValue = input.value.trim();
+            console.log('Input value:', inputValue);
             
             // Validate input
             if (!inputValue) {
+                console.log('No input value');
                 addMessage('system', '⚠️ Please enter an address or ENS name');
                 return;
             }

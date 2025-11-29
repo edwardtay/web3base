@@ -1,3 +1,7 @@
+import * as dotenv from "dotenv";
+// Load environment variables FIRST before any other imports
+dotenv.config();
+
 import express from "express";
 import { logger } from "./utils/logger";
 import { securityAnalytics } from "./utils/security-analytics";
@@ -6,7 +10,6 @@ import { exaSearch } from "./utils/mcp-client";
 import { learnFromInteraction, isLettaEnabled, queryLettaAgent, autonomousAction } from "./utils/letta-client";
 import { detectInputType, getRoutingDescription, formatResponseForType } from "./utils/input-router";
 import { resolveENS, isValidENS } from "./utils/ens-resolver";
-import * as dotenv from "dotenv";
 import path from "path";
 import { dirname } from "path";
 import {
@@ -18,8 +21,6 @@ import {
   errorHandler,
 } from "./middleware/security";
 import { validateBody, ValidationSchemas } from "./middleware/validation";
-
-dotenv.config();
 
 const app = express();
 const port = Number(process.env.PORT) || 8080;
