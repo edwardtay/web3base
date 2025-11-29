@@ -4,9 +4,17 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/api/(.*)",
+      "destination": "/api/index"
+    },
+    {
       "source": "/(.*)",
       "destination": "/api/index"
     }
-  ]
+  ],
+  "env": {
+    "NODE_ENV": "production",
+    "SERVE_FRONTEND": "true"
+  }
 }
 

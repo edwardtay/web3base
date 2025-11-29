@@ -159,9 +159,27 @@ app.get("/readyz", readinessProbe);
 
 // Root page - API info (frontend served separately on Vercel)
 app.get("/", (_req, res) => {
-  // In development, serve frontend; in production, return API info
+  // In development or when SERVE_FRONTEND is true, serve the frontend
   if (process.env.NODE_ENV === 'development' || process.env.SERVE_FRONTEND === 'true') {
-    res.sendFile(path.join(process.cwd(), "frontend", "index.html"));
+    // Try multiple paths for frontend (Vercel vs local)
+    const frontendPaths = [
+      path.join(process.cwd(), "frontend", "index.html"),
+      path.join(__dirname, "..", "frontend", "index.html"),
+      path.join("/var/task", "frontend", "index.html")
+    ];
+    
+    for (const frontendPath of frontendPaths) {
+      try {
+        if (require('fs').existsSync(frontendPath)) {
+          return res.sendFile(frontendPath);
+        }
+      } catch (e) {
+        // Continue to next path
+      }
+    }
+    
+    // If no frontend found, return error
+    return res.status(404).send('Frontend not found. Please check deployment configuration.');
   } else {
     // Production: API-only endpoint
     res.status(200).json({
@@ -1190,7 +1208,24 @@ app.get("/.well-known/agent.json", (_req, res) => {
 // Serve static files from frontend directory ONLY in development (AFTER all API routes)
 // Production: Cloud Run is API-only, frontend served separately on Vercel
 if (process.env.NODE_ENV === 'development' || process.env.SERVE_FRONTEND === 'true') {
-  app.use(express.static(path.join(process.cwd(), "frontend")));
+  // Try multiple paths for frontend directory
+  const frontendDirs = [
+    path.join(process.cwd(), "frontend"),
+    path.join(__dirname, "..", "frontend"),
+    path.join("/var/task", "frontend")
+  ];
+  
+  for (const frontendDir of frontendDirs) {
+    try {
+      if (require('fs').existsSync(frontendDir)) {
+        app.use(express.static(frontendDir));
+        logger.info(`Serving frontend from: ${frontendDir}`);
+        break;
+      }
+    } catch (e) {
+      // Continue to next path
+    }
+  }
 }
 
 // Error handling middleware (must be last)
