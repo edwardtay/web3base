@@ -727,6 +727,110 @@
             align-items: center;
             margin-bottom: 16px;
         }
+        
+        /* Quest System Styles */
+        .quest-container {
+            background: rgba(0, 212, 255, 0.05);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .quest-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .quest-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #00d4ff;
+        }
+        .quest-progress {
+            font-size: 0.9em;
+            color: #8b949e;
+        }
+        .quest-list {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .quest-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .quest-item.completed {
+            background: rgba(63, 185, 80, 0.1);
+            border-color: rgba(63, 185, 80, 0.3);
+        }
+        .quest-item.incomplete {
+            opacity: 0.6;
+        }
+        .quest-icon {
+            font-size: 1.5em;
+            min-width: 32px;
+            text-align: center;
+        }
+        .quest-details {
+            flex: 1;
+        }
+        .quest-name {
+            font-weight: 600;
+            color: #f0f6fc;
+            margin-bottom: 4px;
+        }
+        .quest-description {
+            font-size: 0.85em;
+            color: #8b949e;
+        }
+        .quest-status {
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+        .quest-status.completed {
+            color: #3fb950;
+        }
+        .quest-status.incomplete {
+            color: #8b949e;
+        }
+        .quest-pass {
+            background: linear-gradient(135deg, #00d4ff 0%, #00ff88 100%);
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            color: #0d1117;
+            font-size: 1.1em;
+            margin-top: 16px;
+            box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+        }
+        .quest-verify-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #00d4ff 0%, #00ff88 100%);
+            border: none;
+            border-radius: 8px;
+            color: #0d1117;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+        }
+        .quest-verify-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.5);
+        }
+        .quest-verify-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
     </style>
 </head>
 <body>
@@ -836,6 +940,13 @@
             </div>
         </div>
         <div class="content">
+            <!-- View Toggle -->
+            <div class="dashboard-toggle">
+                <button class="toggle-btn active" onclick="switchView('chat')">💬 Chat</button>
+                <button class="toggle-btn" onclick="switchView('quest')">🎯 Quests</button>
+                <button class="toggle-btn" onclick="switchView('dashboard')">📊 Dashboard</button>
+            </div>
+            
             <!-- Chat View -->
             <div id="chatView" class="dashboard-view active">
                 <div class="chat-section">
@@ -880,6 +991,80 @@
                     </div>
                 </div>
             </div>
+            </div>
+            
+            <!-- Quest View -->
+            <div id="questView" class="dashboard-view">
+                <div class="quest-container">
+                    <div class="quest-header">
+                        <div class="quest-title">🎯 Protocol Quest Pass</div>
+                        <button class="quest-verify-btn" onclick="verifyQuests()" id="questVerifyBtn">
+                            Verify Quests
+                        </button>
+                    </div>
+                    
+                    <p style="color: #8b949e; margin-bottom: 20px; font-size: 0.95em;">
+                        Complete quests by interacting with partner protocols. Earn a pass by completing at least 3 quests!
+                    </p>
+                    
+                    <div class="quest-progress" id="questProgress">
+                        Connect wallet to check quest progress
+                    </div>
+                    
+                    <div class="quest-list" id="questList">
+                        <!-- Quest items will be populated here -->
+                        <div class="quest-item incomplete">
+                            <div class="quest-icon">🔵</div>
+                            <div class="quest-details">
+                                <div class="quest-name">Circle - USDC Holder</div>
+                                <div class="quest-description">Hold USDC on any chain (Ethereum, Polygon, Base)</div>
+                            </div>
+                            <div class="quest-status incomplete">Not Verified</div>
+                        </div>
+                        
+                        <div class="quest-item incomplete">
+                            <div class="quest-icon">🔗</div>
+                            <div class="quest-details">
+                                <div class="quest-name">ZetaChain - Cross-Chain User</div>
+                                <div class="quest-description">Make transactions on ZetaChain mainnet or testnet</div>
+                            </div>
+                            <div class="quest-status incomplete">Not Verified</div>
+                        </div>
+                        
+                        <div class="quest-item incomplete">
+                            <div class="quest-icon">⚡</div>
+                            <div class="quest-details">
+                                <div class="quest-name">Somnia - Network Participant</div>
+                                <div class="quest-description">Make transactions on Somnia mainnet or testnet</div>
+                            </div>
+                            <div class="quest-status incomplete">Not Verified</div>
+                        </div>
+                        
+                        <div class="quest-item incomplete">
+                            <div class="quest-icon">✅</div>
+                            <div class="quest-details">
+                                <div class="quest-name">Seedify - SFUND Holder</div>
+                                <div class="quest-description">Hold SFUND tokens on BSC</div>
+                            </div>
+                            <div class="quest-status incomplete">Not Verified</div>
+                        </div>
+                        
+                        <div class="quest-item incomplete">
+                            <div class="quest-icon">🖥️</div>
+                            <div class="quest-details">
+                                <div class="quest-name">NodeOps - Validator</div>
+                                <div class="quest-description">Run a validator node or stake</div>
+                            </div>
+                            <div class="quest-status incomplete">Not Verified</div>
+                        </div>
+                    </div>
+                    
+                    <div id="questPassContainer" style="display: none;">
+                        <div class="quest-pass">
+                            🎉 Congratulations! You've earned the Protocol Quest Pass!
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <!-- Dashboard View -->
@@ -1337,21 +1522,106 @@
         // View switching
         function switchView(view) {
             const chatView = document.getElementById('chatView');
+            const questView = document.getElementById('questView');
             const dashboardView = document.getElementById('dashboardView');
             const buttons = document.querySelectorAll('.toggle-btn');
             
             buttons.forEach(btn => btn.classList.remove('active'));
+            chatView.classList.remove('active');
+            questView.classList.remove('active');
+            dashboardView.classList.remove('active');
             
             if (view === 'chat') {
                 chatView.classList.add('active');
-                dashboardView.classList.remove('active');
                 buttons[0].classList.add('active');
-            } else {
-                chatView.classList.remove('active');
-                dashboardView.classList.add('active');
+            } else if (view === 'quest') {
+                questView.classList.add('active');
                 buttons[1].classList.add('active');
-                // Load dashboard data when switching to it
+            } else if (view === 'dashboard') {
+                dashboardView.classList.add('active');
+                buttons[2].classList.add('active');
                 loadDashboardData();
+            }
+        }
+        
+        // Quest verification
+        async function verifyQuests() {
+            const address = connectedWallet || document.getElementById('manualAddressInput')?.value.trim();
+            
+            if (!address) {
+                alert('Please connect a wallet or enter an address first');
+                return;
+            }
+            
+            const verifyBtn = document.getElementById('questVerifyBtn');
+            const questProgress = document.getElementById('questProgress');
+            
+            try {
+                verifyBtn.disabled = true;
+                verifyBtn.textContent = 'Verifying...';
+                questProgress.textContent = 'Checking protocol interactions...';
+                
+                const response = await fetch(API_BASE_URL + '/api/quest/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Quest verification failed');
+                }
+                
+                const result = await response.json();
+                const questPass = result.data;
+                
+                // Update quest progress
+                questProgress.textContent = `Progress: ${questPass.totalCompleted}/5 quests completed`;
+                
+                // Update quest items
+                const questIcons = {
+                    'Circle': '🔵',
+                    'ZetaChain': '🔗',
+                    'Somnia': '⚡',
+                    'Seedify': '✅',
+                    'NodeOps': '🖥️'
+                };
+                
+                const questList = document.getElementById('questList');
+                questList.innerHTML = '';
+                
+                questPass.quests.forEach(quest => {
+                    const questItem = document.createElement('div');
+                    questItem.className = `quest-item ${quest.completed ? 'completed' : 'incomplete'}`;
+                    
+                    questItem.innerHTML = `
+                        <div class="quest-icon">${questIcons[quest.protocol]}</div>
+                        <div class="quest-details">
+                            <div class="quest-name">${quest.protocol}</div>
+                            <div class="quest-description">${quest.details || quest.proof || 'Not verified'}</div>
+                        </div>
+                        <div class="quest-status ${quest.completed ? 'completed' : 'incomplete'}">
+                            ${quest.completed ? '✅ Completed' : '❌ Not Completed'}
+                        </div>
+                    `;
+                    
+                    questList.appendChild(questItem);
+                });
+                
+                // Show pass if awarded
+                const passContainer = document.getElementById('questPassContainer');
+                if (questPass.passAwarded) {
+                    passContainer.style.display = 'block';
+                } else {
+                    passContainer.style.display = 'none';
+                }
+                
+            } catch (error) {
+                console.error('Quest verification error:', error);
+                questProgress.textContent = 'Verification failed. Please try again.';
+                alert('Failed to verify quests. Please try again.');
+            } finally {
+                verifyBtn.disabled = false;
+                verifyBtn.textContent = 'Verify Quests';
             }
         }
         window.switchView = switchView;

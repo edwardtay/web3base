@@ -449,6 +449,45 @@ app.post("/api/wallet/analyze", strictLimiter, async (req, res) => {
 });
 
 /**
+ * Quest Verification endpoint - Verify protocol interactions and award passes
+ */
+app.post("/api/quest/verify", strictLimiter, async (req, res) => {
+  try {
+    const { address } = req.body;
+
+    if (!address) {
+      return res.status(400).json({ error: "Wallet address is required" });
+    }
+
+    // Validate address format
+    if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
+      return res.status(400).json({ error: "Invalid Ethereum address format" });
+    }
+
+    logger.info(`Quest verification requested for: ${address}`);
+
+    // Import quest verifier
+    const { verifyAllQuests } = await import("./utils/quest-verifier");
+    
+    // Verify all quests
+    const questPass = await verifyAllQuests(address);
+
+    logger.info(`Quest verification complete: ${questPass.totalCompleted}/5 quests completed`);
+
+    return res.status(200).json({
+      success: true,
+      data: questPass,
+    });
+  } catch (error) {
+    logger.error("Quest verification error:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to verify quests",
+    });
+  }
+});
+
+/**
  * Threat Prevention endpoint - Analyze transaction before execution
  */
 app.post("/api/transaction/prevent-threats", strictLimiter, async (req, res) => {
