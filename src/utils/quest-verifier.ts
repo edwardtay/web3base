@@ -300,8 +300,8 @@ export async function verifyNodeOpsQuest(address: string): Promise<QuestResult> 
     });
 
     if (response.ok) {
-      const data = await response.json() as any;
-      if (data.result && data.result.length > 0) {
+      const data: any = await response.json();
+      if (data.result && Array.isArray(data.result) && data.result.length > 0) {
         return {
           protocol: "NodeOps",
           completed: true,
