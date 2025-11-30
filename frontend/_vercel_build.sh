@@ -16,8 +16,8 @@ if [ -n "$API_URL" ]; then
     # Remove any existing window.__API_URL__ assignments first
     # Then inject new one before "const API_BASE_URL"
     awk -v api_url="$API_URL" '
-        /window\.__API_URL__ = / { next }  # Skip existing assignments
-        /const API_BASE_URL/ && !injected {
+        /window\.__API_URL__\s*=/ { next }  # Skip existing assignments
+        /let API_BASE_URL/ && !injected {
             print "        window.__API_URL__ = '\''" api_url "'\'';"
             injected = 1
         }

@@ -50,12 +50,38 @@ export const corsMiddleware = cors({
       return callback(null, true);
     }
     
+    // Check exact match first
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
-    } else {
-      logger.warn(`CORS blocked origin: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
+      return;
     }
+    
+    // Allow Vercel domains (pattern: *.vercel.app)
+    // This allows any Vercel deployment to access the API
+    if (origin.endsWith('.vercel.app')) {
+      logger.info(`CORS allowing Vercel origin: ${origin}`);
+      callback(null, true);
+      return;
+    }
+    
+    // Allow custom domains that might be configured
+    // Check if origin matches any pattern in allowedOrigins (wildcard support)
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (allowed.includes('*')) {
+        const pattern = allowed.replace(/\*/g, '.*');
+        const regex = new RegExp(`^${pattern}$`);
+        return regex.test(origin);
+      }
+      return false;
+    });
+    
+    if (isAllowed) {
+      callback(null, true);
+      return;
+    }
+    
+    logger.warn(`CORS blocked origin: ${origin}`);
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
