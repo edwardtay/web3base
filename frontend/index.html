@@ -1079,15 +1079,9 @@
         if (isLocalhost) {
             // Local development
             API_BASE_URL = 'http://localhost:9000';
-        } else if (window.location.hostname.includes('vercel.app')) {
-            // Vercel deployment - use same domain
-            API_BASE_URL = window.location.origin;
-        } else if (typeof window !== 'undefined' && window.__API_URL__) {
-            // Custom injected API URL
-            API_BASE_URL = window.__API_URL__;
         } else {
-            // Fallback to current domain (works for most deployments)
-            API_BASE_URL = window.location.origin;
+            // Production - always use Google Cloud Run backend
+            API_BASE_URL = 'https://webwatcher.lever-labs.com';
         }
         
         console.log('🚀 Web3Base loaded - API:', API_BASE_URL);
