@@ -1367,11 +1367,7 @@
                     return;
                 }
 
-                // Auto-replace "audit my wallet" with actual wallet address if connected
-                if (connectedWallet && (message.toLowerCase() === 'audit my wallet' || message.toLowerCase() === 'audit wallet')) {
-                    message = `audit ${connectedWallet}`;
-                    console.log('Auto-replaced with connected wallet:', message);
-                }
+                // Message processing (removed auto-replace logic)
 
                 const sendButton = document.getElementById('sendButton');
                 if (!sendButton) {
@@ -1382,7 +1378,7 @@
                 sendButton.disabled = true;
                 sendButton.textContent = '⏳';
 
-                // Add user message to chat (show original if it was "audit my wallet")
+                // Add user message to chat
                 addMessage('user', input.value.trim());
                 input.value = '';
 
@@ -2297,7 +2293,7 @@
                 }
             } catch (error) {
                 console.error('Error fetching wallet data:', error);
-                addMessage('system', `⚠️ Error analyzing wallet. Type "audit my wallet" for security analysis.`);
+                addMessage('system', `⚠️ Error analyzing wallet. Please try again or enter the address manually.`);
             }
         }
         // Listen for account changes
