@@ -21,6 +21,20 @@ import {
   errorHandler,
 } from "./middleware/security";
 import { validateBody, ValidationSchemas } from "./middleware/validation";
+import { requestIdMiddleware, getRequestId } from "./middleware/request-id";
+import { 
+  cache, 
+  getWalletCacheKey, 
+  getENSCacheKey, 
+  getQuestCacheKey,
+  CacheTTL 
+} from "./utils/cache";
+import { 
+  deduplicator, 
+  getWalletDeduplicationKey, 
+  getENSDeduplicationKey,
+  getQuestDeduplicationKey 
+} from "./utils/request-deduplication";
 
 const app = express();
 const port = Number(process.env.PORT) || 8080;
@@ -28,6 +42,10 @@ const port = Number(process.env.PORT) || 8080;
 // Security middleware (must be first)
 app.use(helmetMiddleware);
 app.use(corsMiddleware);
+
+// Request ID tracking (before logging)
+app.use(requestIdMiddleware);
+
 app.use(requestLogger);
 
 // Body parser with size limit
@@ -243,7 +261,44 @@ app.get("/capabilities", (_req, res) => {
       frameworks: ["AgentKit", "LangChain", "Letta"],
       deployment: "Cloud Run + Vercel",
       scalability: "Auto-scaling",
+    },
+    performance: {
+      caching: true,
+      requestDeduplication: true,
+      requestIdTracking: true,
     }
+  });
+});
+
+// Cache statistics endpoint (for monitoring)
+app.get("/api/cache/stats", (_req, res) => {
+  const cacheStats = cache.getStats();
+  const deduplicationStats = deduplicator.getStats();
+  
+  res.status(200).json({
+    cache: {
+      size: cacheStats.size,
+      keys: cacheStats.keys.length,
+      sampleKeys: cacheStats.keys.slice(0, 10),
+    },
+    deduplication: {
+      pendingRequests: deduplicationStats.pendingCount,
+      keys: deduplicationStats.keys.length,
+      sampleKeys: deduplicationStats.keys.slice(0, 10),
+    },
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// Clear cache endpoint (admin only - add auth in production)
+app.post("/api/cache/clear", (_req, res) => {
+  cache.clear();
+  deduplicator.clear();
+  
+  res.status(200).json({
+    success: true,
+    message: "Cache and deduplication cleared",
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -251,6 +306,8 @@ app.get("/capabilities", (_req, res) => {
  * ENS Resolution endpoint
  */
 app.post("/api/resolve-ens", strictLimiter, async (req, res) => {
+  const requestId = getRequestId(req);
+  
   try {
     const { name } = req.body;
 
@@ -258,14 +315,39 @@ app.post("/api/resolve-ens", strictLimiter, async (req, res) => {
       return res.status(400).json({ error: "ENS name is required" });
     }
 
-    const resolvedAddress = await resolveENS(name);
+    // Check cache first
+    const cacheKey = getENSCacheKey(name);
+    const cached = cache.get<{ success: boolean; name: string; address: string }>(cacheKey);
+    
+    if (cached) {
+      logger.info(`[${requestId}] ENS cache hit: ${name}`);
+      return res.status(200).json({ ...cached, cached: true });
+    }
+
+    // Deduplicate concurrent requests
+    const deduplicationKey = getENSDeduplicationKey(name);
+    const { data: resolvedAddress, deduplicated } = await deduplicator.deduplicate(
+      deduplicationKey,
+      requestId,
+      () => resolveENS(name),
+      10000 // 10 second timeout
+    );
+
+    if (deduplicated) {
+      logger.info(`[${requestId}] ENS request deduplicated: ${name}`);
+    }
 
     if (resolvedAddress) {
-      res.status(200).json({
+      const result = {
         success: true,
         name,
         address: resolvedAddress
-      });
+      };
+      
+      // Cache successful resolution
+      cache.set(cacheKey, result, CacheTTL.ENS_RESOLUTION);
+      
+      res.status(200).json({ ...result, deduplicated });
     } else {
       res.status(404).json({
         success: false,
@@ -273,7 +355,7 @@ app.post("/api/resolve-ens", strictLimiter, async (req, res) => {
       });
     }
   } catch (error: any) {
-    logger.error('ENS resolution error:', error);
+    logger.error(`[${requestId}] ENS resolution error:`, error);
     res.status(500).json({
       success: false,
       error: 'Failed to resolve ENS name',
@@ -286,6 +368,8 @@ app.post("/api/resolve-ens", strictLimiter, async (req, res) => {
  * Wallet Analysis endpoint - Analyze wallet using Moralis and Blockscout
  */
 app.post("/api/wallet/analyze", strictLimiter, async (req, res) => {
+  const requestId = getRequestId(req);
+  
   try {
     const { address } = req.body;
 
@@ -298,8 +382,51 @@ app.post("/api/wallet/analyze", strictLimiter, async (req, res) => {
       return res.status(400).json({ error: "Invalid Ethereum address format" });
     }
 
-    // Fetch data from Moralis, Blockscout, Alchemy, Thirdweb, Revoke.cash, Nansen, MetaSleuth, and Passport
-    const [moralisData, blockscoutData, alchemyData, thirdwebData, revokeData, nansenData, metasleuthData, passportData] = await Promise.allSettled([
+    // Check cache first
+    const cacheKey = getWalletCacheKey(address);
+    const cached = cache.get<any>(cacheKey);
+    
+    if (cached) {
+      logger.info(`[${requestId}] Wallet analysis cache hit: ${address}`);
+      return res.status(200).json({ ...cached, cached: true });
+    }
+
+    // Deduplicate concurrent requests
+    const deduplicationKey = getWalletDeduplicationKey(address);
+    const { data: result, deduplicated } = await deduplicator.deduplicate(
+      deduplicationKey,
+      requestId,
+      async () => {
+        logger.info(`[${requestId}] Fetching wallet analysis for: ${address}`);
+        return await performWalletAnalysis(address, requestId);
+      },
+      30000 // 30 second timeout
+    );
+
+    if (deduplicated) {
+      logger.info(`[${requestId}] Wallet analysis request deduplicated: ${address}`);
+    }
+
+    // Cache the result
+    cache.set(cacheKey, result, CacheTTL.WALLET_ANALYSIS);
+
+    res.status(200).json({ ...result, deduplicated });
+  } catch (error: any) {
+    logger.error(`[${requestId}] Wallet analysis error:`, error);
+    res.status(500).json({ 
+      error: 'Failed to analyze wallet',
+      message: error.message 
+    });
+  }
+});
+
+/**
+ * Helper function to perform wallet analysis
+ */
+async function performWalletAnalysis(address: string, requestId: string) {
+
+  // Fetch data from Moralis, Blockscout, Alchemy, Thirdweb, Revoke.cash, Nansen, MetaSleuth, and Passport
+  const [moralisData, blockscoutData, alchemyData, thirdwebData, revokeData, nansenData, metasleuthData, passportData] = await Promise.allSettled([
       (async () => {
         const { analyzeWalletSecurity, getWalletTransactions } = await import('./integrations/moralis');
         const [analysis, transactions] = await Promise.all([
@@ -336,122 +463,117 @@ app.post("/api/wallet/analyze", strictLimiter, async (req, res) => {
         const { getComprehensiveAnalysis } = await import('./integrations/metasleuth');
         return await getComprehensiveAnalysis(address, 'ethereum');
       })(),
-      (async () => {
-        const { getPassportAnalysis } = await import('./integrations/passport');
-        return await getPassportAnalysis(address);
-      })(),
-    ]);
+    (async () => {
+      const { getPassportAnalysis } = await import('./integrations/passport');
+      return await getPassportAnalysis(address);
+    })(),
+  ]);
 
-    const result: any = {
-      success: true,
-      address,
-      timestamp: new Date().toISOString(),
-    };
+  const result: any = {
+    success: true,
+    address,
+    timestamp: new Date().toISOString(),
+  };
 
-    // Merge Moralis data
-    if (moralisData.status === 'fulfilled') {
-      result.moralis = moralisData.value;
-      
-      // Learn patterns from transactions
-      if (moralisData.value.transactions && moralisData.value.transactions.length > 0) {
-        try {
-          const { learnFromTransactions, getPatternSummary } = await import('./utils/pattern-learner');
-          learnFromTransactions(address, moralisData.value.transactions);
-          result.patternSummary = getPatternSummary(address);
-        } catch (error) {
-          logger.warn('Pattern learning failed:', error);
-        }
+  // Merge Moralis data
+  if (moralisData.status === 'fulfilled') {
+    result.moralis = moralisData.value;
+    
+    // Learn patterns from transactions
+    if (moralisData.value.transactions && moralisData.value.transactions.length > 0) {
+      try {
+        const { learnFromTransactions, getPatternSummary } = await import('./utils/pattern-learner');
+        learnFromTransactions(address, moralisData.value.transactions);
+        result.patternSummary = getPatternSummary(address);
+      } catch (error) {
+        logger.warn(`[${requestId}] Pattern learning failed:`, error);
       }
-    } else {
-      logger.warn('Moralis data fetch failed:', moralisData.reason);
-      result.moralis = { error: 'Failed to fetch Moralis data' };
     }
-
-    // Merge Blockscout data
-    if (blockscoutData.status === 'fulfilled') {
-      result.blockscout = blockscoutData.value;
-    } else {
-      logger.warn('Blockscout data fetch failed:', blockscoutData.reason);
-      result.blockscout = { error: 'Failed to fetch Blockscout data' };
-    }
-
-    // Merge Alchemy data
-    if (alchemyData.status === 'fulfilled') {
-      result.alchemy = alchemyData.value;
-    } else {
-      logger.warn('Alchemy data fetch failed:', alchemyData.reason);
-      result.alchemy = { error: 'Failed to fetch Alchemy data' };
-    }
-
-    // Merge Thirdweb data
-    if (thirdwebData.status === 'fulfilled') {
-      result.thirdweb = thirdwebData.value;
-    } else {
-      logger.warn('Thirdweb data fetch failed:', thirdwebData.reason);
-      result.thirdweb = { error: 'Failed to fetch Thirdweb data' };
-    }
-
-    // Merge Revoke.cash data
-    if (revokeData.status === 'fulfilled') {
-      result.revoke = revokeData.value;
-    } else {
-      logger.warn('Revoke.cash data fetch failed:', revokeData.reason);
-      result.revoke = { error: 'Failed to fetch Revoke.cash data' };
-    }
-
-    // Merge Nansen data
-    if (nansenData.status === 'fulfilled') {
-      result.nansen = nansenData.value;
-    } else {
-      logger.warn('Nansen data fetch failed:', nansenData.reason);
-      result.nansen = { error: 'Failed to fetch Nansen data' };
-    }
-
-    // Merge MetaSleuth data
-    if (metasleuthData.status === 'fulfilled') {
-      result.metasleuth = metasleuthData.value;
-    } else {
-      logger.warn('MetaSleuth data fetch failed:', metasleuthData.reason);
-      result.metasleuth = { error: 'Failed to fetch MetaSleuth data' };
-    }
-
-    // Merge Passport data
-    if (passportData.status === 'fulfilled') {
-      result.passport = passportData.value;
-    } else {
-      logger.warn('Passport data fetch failed:', passportData.reason);
-      result.passport = { error: 'Failed to fetch Passport data' };
-    }
-
-    // Check for threat intelligence
-    try {
-      const { checkWalletThreats, getThreatSummary } = await import('./utils/threat-intelligence');
-      const transactions = result.moralis?.transactions || result.blockscout?.transactions || [];
-      const approvals = result.revoke?.summary?.totalApprovals || 0;
-      
-      const threats = await checkWalletThreats(address, transactions, approvals > 0 ? [{}] : []);
-      result.threats = {
-        active: threats,
-        summary: getThreatSummary()
-      };
-    } catch (error) {
-      logger.warn('Threat intelligence check failed:', error);
-    }
-
-    res.status(200).json(result);
-  } catch (error: any) {
-    logger.error('Wallet analysis error:', error);
-    res.status(500).json({ 
-      error: 'Failed to analyze wallet',
-      message: error.message 
-    });
+  } else {
+    logger.warn(`[${requestId}] Moralis data fetch failed:`, moralisData.reason);
+    result.moralis = { error: 'Failed to fetch Moralis data' };
   }
-});
+
+  // Merge Blockscout data
+  if (blockscoutData.status === 'fulfilled') {
+    result.blockscout = blockscoutData.value;
+  } else {
+    logger.warn(`[${requestId}] Blockscout data fetch failed:`, blockscoutData.reason);
+    result.blockscout = { error: 'Failed to fetch Blockscout data' };
+  }
+
+  // Merge Alchemy data
+  if (alchemyData.status === 'fulfilled') {
+    result.alchemy = alchemyData.value;
+  } else {
+    logger.warn(`[${requestId}] Alchemy data fetch failed:`, alchemyData.reason);
+    result.alchemy = { error: 'Failed to fetch Alchemy data' };
+  }
+
+  // Merge Thirdweb data
+  if (thirdwebData.status === 'fulfilled') {
+    result.thirdweb = thirdwebData.value;
+  } else {
+    logger.warn(`[${requestId}] Thirdweb data fetch failed:`, thirdwebData.reason);
+    result.thirdweb = { error: 'Failed to fetch Thirdweb data' };
+  }
+
+  // Merge Revoke.cash data
+  if (revokeData.status === 'fulfilled') {
+    result.revoke = revokeData.value;
+  } else {
+    logger.warn(`[${requestId}] Revoke.cash data fetch failed:`, revokeData.reason);
+    result.revoke = { error: 'Failed to fetch Revoke.cash data' };
+  }
+
+  // Merge Nansen data
+  if (nansenData.status === 'fulfilled') {
+    result.nansen = nansenData.value;
+  } else {
+    logger.warn(`[${requestId}] Nansen data fetch failed:`, nansenData.reason);
+    result.nansen = { error: 'Failed to fetch Nansen data' };
+  }
+
+  // Merge MetaSleuth data
+  if (metasleuthData.status === 'fulfilled') {
+    result.metasleuth = metasleuthData.value;
+  } else {
+    logger.warn(`[${requestId}] MetaSleuth data fetch failed:`, metasleuthData.reason);
+    result.metasleuth = { error: 'Failed to fetch MetaSleuth data' };
+  }
+
+  // Merge Passport data
+  if (passportData.status === 'fulfilled') {
+    result.passport = passportData.value;
+  } else {
+    logger.warn(`[${requestId}] Passport data fetch failed:`, passportData.reason);
+    result.passport = { error: 'Failed to fetch Passport data' };
+  }
+
+  // Check for threat intelligence
+  try {
+    const { checkWalletThreats, getThreatSummary } = await import('./utils/threat-intelligence');
+    const transactions = result.moralis?.transactions || result.blockscout?.transactions || [];
+    const approvals = result.revoke?.summary?.totalApprovals || 0;
+    
+    const threats = await checkWalletThreats(address, transactions, approvals > 0 ? [{}] : []);
+    result.threats = {
+      active: threats,
+      summary: getThreatSummary()
+    };
+  } catch (error) {
+    logger.warn(`[${requestId}] Threat intelligence check failed:`, error);
+  }
+
+  return result;
+}
 
 /**
  * Quest Verification endpoint - Verify protocol interactions and award passes
  */
 app.post("/api/quest/verify", strictLimiter, async (req, res) => {
+  const requestId = getRequestId(req);
+  
   try {
     const { address } = req.body;
 
@@ -473,22 +595,51 @@ app.post("/api/quest/verify", strictLimiter, async (req, res) => {
       });
     }
 
-    logger.info(`Quest verification requested for: ${normalizedAddress}`);
-
-    // Import quest verifier
-    const { verifyAllQuests } = await import("./utils/quest-verifier");
+    // Check cache first
+    const cacheKey = getQuestCacheKey(normalizedAddress);
+    const cached = cache.get<any>(cacheKey);
     
-    // Verify all quests
-    const questPass = await verifyAllQuests(normalizedAddress);
+    if (cached) {
+      logger.info(`[${requestId}] Quest verification cache hit: ${normalizedAddress}`);
+      return res.status(200).json({ ...cached, cached: true });
+    }
 
-    logger.info(`Quest verification complete: ${questPass.totalCompleted}/5 quests completed for ${normalizedAddress}`);
+    // Deduplicate concurrent requests
+    const deduplicationKey = getQuestDeduplicationKey(normalizedAddress);
+    const { data: questPass, deduplicated } = await deduplicator.deduplicate(
+      deduplicationKey,
+      requestId,
+      async () => {
+        logger.info(`[${requestId}] Quest verification requested for: ${normalizedAddress}`);
+        
+        // Import quest verifier
+        const { verifyAllQuests } = await import("./utils/quest-verifier");
+        
+        // Verify all quests
+        const result = await verifyAllQuests(normalizedAddress);
+        
+        logger.info(`[${requestId}] Quest verification complete: ${result.totalCompleted}/5 quests completed for ${normalizedAddress}`);
+        
+        return result;
+      },
+      20000 // 20 second timeout
+    );
 
-    return res.status(200).json({
+    if (deduplicated) {
+      logger.info(`[${requestId}] Quest verification request deduplicated: ${normalizedAddress}`);
+    }
+
+    const result = {
       success: true,
       data: questPass,
-    });
+    };
+
+    // Cache the result
+    cache.set(cacheKey, result, CacheTTL.QUEST_VERIFICATION);
+
+    return res.status(200).json({ ...result, deduplicated });
   } catch (error: any) {
-    logger.error("Quest verification error:", error);
+    logger.error(`[${requestId}] Quest verification error:`, error);
     const errorMessage = error?.message || "Failed to verify quests";
     return res.status(500).json({
       success: false,

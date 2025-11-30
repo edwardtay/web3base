@@ -8,43 +8,54 @@
 - **AI Chat Assistant**: Ask security questions and get intelligent responses powered by GPT-4
 - **ENS Resolution**: Resolve .eth domain names to wallet addresses
 - **Wallet Analysis**: Comprehensive security analysis using 8 blockchain data providers
-- **Transaction Prevention**: Pre-transaction threat analysis and risk scoring
-- **Web Search**: Real-time security intelligence via Exa MCP
+- **Quest Verification**: Verify protocol interactions across Circle, ZetaChain, Somnia, Seedify, and NodeOps
+- **NFT Rewards**: Mint achievement NFTs on ZetaChain testnet for completing quests
 
 ### Technology Stack
 - **Coinbase AgentKit**: Framework for building AI agents with blockchain capabilities
 - **LangChain**: AI orchestration and conversation management
 - **OpenAI GPT-4**: Natural language understanding and generation
-- **Exa MCP**: Model Context Protocol for semantic web search
 - **Express.js**: Backend API server with security middleware
+- **Performance**: Response caching, request deduplication, request ID tracking
+- **Multi-Chain**: Ethereum, Base, Polygon, BSC, ZetaChain support
 
 ## 🎯 Features
 
 ### Core Capabilities
 
-1. **Transaction Monitoring**
-   - Real-time transaction analysis
-   - Suspicious pattern detection
-   - Risk scoring and severity assessment
-   - Gas usage anomaly detection
-
-2. **Address Analysis**
-   - Contract vs EOA verification
-   - Balance anomaly detection
+1. **Wallet Analysis**
+   - Multi-chain wallet security analysis
+   - Token balance and NFT holdings
    - Transaction history analysis
-   - Threat indicator identification
+   - Token approval security checks
+   - Risk scoring and threat detection
 
-3. **Wallet Security**
-   - Balance monitoring
-   - Unauthorized access detection
-   - Security status reporting
-   - Automated alerts
+2. **Quest System**
+   - Verify interactions with partner protocols
+   - Track progress across 5 different chains/protocols
+   - Award achievement passes for completing quests
+   - Mint NFTs on ZetaChain testnet
 
-4. **Security Analytics**
-   - Event logging and tracking
-   - Risk score aggregation
-   - Security summary reports
-   - Historical analysis
+3. **ENS Resolution**
+   - Resolve .eth domain names to addresses
+   - Cached for fast repeated lookups
+   - Integrated with wallet analysis
+
+4. **Multi-Provider Integration**
+   - Moralis: Wallet security and transaction data
+   - Alchemy: Token balances and NFT holdings
+   - Blockscout: Blockchain explorer data
+   - Thirdweb: Wallet portfolio tracking
+   - Revoke.cash: Token approval security
+   - Nansen: Wallet intelligence (when available)
+   - MetaSleuth: Address risk scoring (when available)
+   - Gitcoin Passport: Identity verification (when available)
+
+5. **Performance Optimizations** ⚡
+   - **Response Caching**: 10-100x faster repeated queries
+   - **Request Deduplication**: Prevents duplicate processing
+   - **Request ID Tracking**: Complete request tracing for debugging
+   - See [PERFORMANCE_IMPROVEMENTS.md](docs/PERFORMANCE_IMPROVEMENTS.md) for details
 
 ## 🚀 Getting Started
 
@@ -113,6 +124,7 @@ npm run build
 
 - **[SECURITY.md](SECURITY.md)** - Security implementation guide and best practices
 - **[PARTNER_INTEGRATIONS.md](docs/PARTNER_INTEGRATIONS.md)** - Partner SDK integrations and usage guide
+- **[PERFORMANCE_IMPROVEMENTS.md](docs/PERFORMANCE_IMPROVEMENTS.md)** - Caching, deduplication, and request tracking
 - **[Private Docs](private/docs/)** - Internal documentation, deployment guides, and improvements
 
 ## 📖 Usage
@@ -210,40 +222,54 @@ web3base/
 
 ## 🔒 Security Features
 
-### Risk Detection
+### Wallet Analysis
 
-- **Large Transfer Detection**: Alerts on transfers >100 ETH
-- **Zero-Value Transaction Analysis**: Detects potential spam
-- **Failed Transaction Monitoring**: Tracks reverted transactions
-- **High Gas Usage Detection**: Identifies complex contract interactions
-- **Balance Anomaly Detection**: Monitors for unexpected balance changes
+- **Multi-Provider Data**: Aggregates data from 8 blockchain providers
+- **Token Approvals**: Security analysis via Revoke.cash
+- **Transaction History**: Comprehensive transaction analysis
+- **Balance Tracking**: Token and NFT holdings across chains
+- **Risk Assessment**: Identifies potential security concerns
 
-### Risk Scoring
+### Quest Verification
 
-- **LOW**: Risk score 0-24
-- **MEDIUM**: Risk score 25-49
-- **HIGH**: Risk score 50+
+- **Circle**: Verify USDC holdings on Ethereum, Polygon, or Base
+- **ZetaChain**: Check for transactions on mainnet or testnet
+- **Somnia**: Verify activity on Somnia network
+- **Seedify**: Check SFUND token holdings on BSC
+- **NodeOps**: Verify NODE token holdings or validator activity
 
-### Threat Indicators
+## 📊 API Endpoints
 
-- Contract address verification
-- Balance anomalies
-- Transaction pattern analysis
-- Gas usage patterns
-- Failed transaction tracking
+### Wallet Analysis
+```bash
+POST /api/wallet/analyze
+```
+Analyze wallet security using 8 blockchain data providers.
 
-## 📊 Security Analytics
+### ENS Resolution
+```bash
+POST /api/resolve-ens
+```
+Resolve .eth domain names to wallet addresses.
 
-The agent maintains a security event log with:
-- Event type classification
-- Severity levels (low, medium, high, critical)
-- Risk scores
-- Timestamps
-- Detailed event data
+### Quest Verification
+```bash
+POST /api/quest/verify
+```
+Verify protocol interactions and award achievement passes.
 
-Access analytics via:
-- Chat mode: Type `summary` for security summary
-- Programmatic: `securityAnalytics.getSummary()`
+### NFT Minting
+```bash
+POST /api/quest/mint-nft
+```
+Mint achievement NFT on ZetaChain testnet (requires 3+ quests completed).
+
+### Performance Monitoring
+```bash
+GET /api/cache/stats
+POST /api/cache/clear
+```
+Monitor and manage response cache.
 
 ## 🛠️ Development
 
