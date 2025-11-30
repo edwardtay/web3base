@@ -48,31 +48,29 @@
             color: #c9d1d9;
         }
         .container {
-            max-width: 1000px;
+            max-width: 100%;
             width: 100%;
-            margin: 0 auto;
+            margin: 0;
             background: #161b22;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
+            border: none;
+            border-radius: 0;
             overflow: hidden;
             flex: 1;
             display: flex;
             flex-direction: column;
-            margin-top: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+            box-shadow: none;
         }
         .header {
             background: linear-gradient(135deg, #1a1f2e 0%, #161b22 100%);
-            border-bottom: 2px solid rgba(0, 212, 255, 0.3);
+            border-bottom: 1px solid rgba(0, 212, 255, 0.2);
             color: #f0f6fc;
-            padding: 40px 40px 32px 40px;
+            padding: 16px 20px 12px 20px;
             text-align: center;
             position: relative;
         }
         .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 12px;
+            font-size: 1.5em;
+            margin-bottom: 4px;
             font-weight: 700;
             letter-spacing: -0.5px;
             background: linear-gradient(135deg, #00d4ff 0%, #00ff88 100%);
@@ -82,9 +80,9 @@
         }
         .header p {
             opacity: 0.8;
-            font-size: 1.1em;
+            font-size: 0.85em;
             font-weight: 500;
-            margin-bottom: 20px;
+            margin-bottom: 8px;
         }
         .security-layers {
             display: flex;
@@ -270,7 +268,7 @@
             color: #58a6ff;
         }
         .content {
-            padding: 32px 40px;
+            padding: 8px 12px;
             flex: 1;
             display: flex;
             flex-direction: column;
@@ -280,17 +278,17 @@
         .dashboard-toggle {
             display: flex;
             justify-content: center;
-            gap: 12px;
-            margin-bottom: 16px;
+            gap: 8px;
+            margin-bottom: 8px;
         }
         .toggle-btn {
-            padding: 6px 18px;
+            padding: 4px 12px;
             background: rgba(0, 212, 255, 0.1);
             border: 1px solid rgba(0, 212, 255, 0.3);
             border-radius: 6px;
             color: #00d4ff;
             cursor: pointer;
-            font-size: 0.9em;
+            font-size: 0.85em;
             font-weight: 500;
             transition: all 0.2s ease;
         }
@@ -404,13 +402,13 @@
         }
         .chat-messages {
             background: #0d1117;
-            border-radius: 8px;
-            padding: 24px;
+            border-radius: 0;
+            padding: 12px;
             flex: 1 1 auto;
             overflow-y: auto;
             overflow-x: hidden;
-            margin-bottom: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 8px;
+            border: none;
             min-height: 0;
             max-height: none;
         }
@@ -429,9 +427,9 @@
             background: rgba(0, 255, 255, 0.5);
         }
         .message {
-            margin-bottom: 20px;
-            padding: 16px 20px;
-            border-radius: 8px;
+            margin-bottom: 12px;
+            padding: 10px 14px;
+            border-radius: 6px;
         }
         .message.user {
             background: rgba(56, 139, 253, 0.1);
@@ -638,19 +636,19 @@
         /* Example queries */
         .example-queries {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             flex-wrap: wrap;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             justify-content: center;
         }
         .example-query-btn {
-            padding: 6px 12px;
+            padding: 4px 10px;
             background: rgba(0, 212, 255, 0.1);
             border: 1px solid rgba(0, 212, 255, 0.3);
-            border-radius: 16px;
+            border-radius: 12px;
             color: #00d4ff;
             cursor: pointer;
-            font-size: 0.8em;
+            font-size: 0.75em;
             font-weight: 500;
             transition: all 0.2s ease;
             white-space: nowrap;
@@ -775,29 +773,29 @@
             <p>AI-Powered Wallet Analysis & Security Assistant</p>
             
             <!-- Compact Wallet Input -->
-            <div style="margin-top: 20px; max-width: 600px; margin-left: auto; margin-right: auto;">
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <button id="connectWalletBtn" class="connect-wallet-btn" onclick="toggleWalletConnection()" style="min-width: 140px;">
+            <div style="margin-top: 8px; max-width: 600px; margin-left: auto; margin-right: auto;">
+                <div style="display: flex; gap: 6px; align-items: center;">
+                    <button id="connectWalletBtn" class="connect-wallet-btn" onclick="toggleWalletConnection()" style="min-width: 100px; padding: 8px 12px; font-size: 0.85em;">
                         🔗 Connect
                     </button>
-                    <span style="color: #8b949e; font-size: 0.85em;">or</span>
+                    <span style="color: #8b949e; font-size: 0.75em;">or</span>
                     <input 
                         type="text" 
                         id="manualAddressInput" 
-                        placeholder="Enter address or ENS (vitalik.eth)" 
-                        style="flex: 1; padding: 12px 16px; background: #0d1117; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; font-size: 0.9em; color: #f0f6fc; font-family: 'Courier New', monospace;"
+                        placeholder="Enter address or ENS" 
+                        style="flex: 1; padding: 8px 12px; background: #0d1117; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 6px; font-size: 0.85em; color: #f0f6fc; font-family: 'Courier New', monospace;"
                         onkeypress="if(event.key==='Enter') analyzeManualAddress()"
                     />
                     <button 
                         onclick="console.log('Button clicked!'); analyzeManualAddress()" 
-                        style="padding: 12px 20px; background: linear-gradient(135deg, #238636 0%, #2ea043 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; white-space: nowrap; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(35, 134, 54, 0.25);"
-                        onmouseover="this.style.background='linear-gradient(135deg, #2ea043 0%, #3fb950 100%)'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(35, 134, 54, 0.35)';"
-                        onmouseout="this.style.background='linear-gradient(135deg, #238636 0%, #2ea043 100%)'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(35, 134, 54, 0.25)';"
+                        style="padding: 8px 14px; background: linear-gradient(135deg, #238636 0%, #2ea043 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; white-space: nowrap; transition: all 0.3s ease; font-size: 0.85em;"
+                        onmouseover="this.style.background='linear-gradient(135deg, #2ea043 0%, #3fb950 100%)';"
+                        onmouseout="this.style.background='linear-gradient(135deg, #238636 0%, #2ea043 100%)';"
                     >
                         🔍 Analyze
                     </button>
                 </div>
-                <div id="walletStatus" style="margin-top: 8px; font-size: 0.85em; color: #8b949e; text-align: center;"></div>
+                <div id="walletStatus" style="margin-top: 4px; font-size: 0.75em; color: #8b949e; text-align: center;"></div>
             </div>
         </div>
         
