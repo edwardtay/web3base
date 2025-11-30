@@ -1085,23 +1085,34 @@
 
     <script>
         // API endpoint - Set API_URL environment variable in Vercel dashboard
-        // Defaults to Google Cloud Run URL if not set
         // window.__API_URL__ will be injected by Vercel build script
         // API endpoint configuration
         const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         
         // Determine API base URL
+        // Priority: 1) window.__API_URL__ (injected by Vercel), 2) localhost detection, 3) fallback
         let API_BASE_URL;
-        if (isLocalhost) {
-            // Local development
-            API_BASE_URL = 'http://localhost:9000';
+        if (typeof window !== 'undefined' && window.__API_URL__) {
+            // Use API URL injected by Vercel build script
+            API_BASE_URL = window.__API_URL__;
+            console.log('📦 Using API_URL from Vercel build:', API_BASE_URL);
+        } else if (isLocalhost) {
+            // Local development - use port 8080 where server runs
+            API_BASE_URL = 'http://localhost:8080';
+            console.log('🏠 Using localhost API:', API_BASE_URL);
         } else {
-            // Production - always use Google Cloud Run backend
+            // Production fallback - use Google Cloud Run backend
             API_BASE_URL = 'https://webwatcher.lever-labs.com';
+            console.log('🌐 Using production API:', API_BASE_URL);
         }
         
         console.log('🚀 Web3Base loaded - API:', API_BASE_URL);
-        console.log('🔧 Environment:', { isLocalhost, hostname: window.location.hostname });
+        console.log('🔧 Environment:', { 
+            isLocalhost, 
+            hostname: window.location.hostname,
+            hasInjectedUrl: typeof window !== 'undefined' && !!window.__API_URL__,
+            injectedUrl: typeof window !== 'undefined' ? window.__API_URL__ : 'N/A'
+        });
         
         let threadId = 'web-' + Date.now();
         
