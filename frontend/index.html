@@ -27,6 +27,9 @@
     <meta property="twitter:description" content="AI-powered security agent for Web3. Analyze wallets, detect threats, and monitor blockchain security in real-time.">
     <meta property="twitter:image" content="https://web3base.com/og-image.png">
     
+    <!-- Confetti library for NFT mint celebration -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    
     <style>
         * {
             margin: 0;
@@ -1111,9 +1114,9 @@
             API_BASE_URL = 'http://localhost:8080';
             console.log('🏠 Using localhost API:', API_BASE_URL);
         } else {
-            // Production fallback - use Google Cloud Run backend
-            API_BASE_URL = 'https://webwatcher.lever-labs.com';
-            console.log('🌐 Using production API:', API_BASE_URL);
+            // Production fallback - use Cloud Run service directly (has quest endpoints)
+            API_BASE_URL = 'https://verisense-agentkit-414780218994.us-central1.run.app';
+            console.log('🌐 Using production API (Cloud Run):', API_BASE_URL);
         }
         
         console.log('🚀 Web3Base loaded - API:', API_BASE_URL);
@@ -1652,40 +1655,15 @@
                         return;
                     }
                     
-                    // Switch to ZetaChain testnet if needed
-                    const chainId = `0x${result.data.chainId.toString(16)}`;
-                    try {
-                        await window.ethereum.request({
-                            method: 'wallet_switchEthereumChain',
-                            params: [{ chainId: chainId }],
-                        });
-                    } catch (switchError) {
-                        // Chain doesn't exist, add it
-                        if (switchError.code === 4902) {
-                            await window.ethereum.request({
-                                method: 'wallet_addEthereumChain',
-                                params: [{
-                                    chainId: chainId,
-                                    chainName: 'ZetaChain Testnet',
-                                    nativeCurrency: {
-                                        name: 'ZETA',
-                                        symbol: 'ZETA',
-                                        decimals: 18,
-                                    },
-                                    rpcUrls: [result.data.rpcUrl],
-                                    blockExplorerUrls: ['https://zetachain-athens-3.blockscout.com'],
-                                }],
-                            });
-                        } else {
-                            throw switchError;
-                        }
-                    }
+                    // Store transaction data in closure (avoid CSP issues with data attributes)
+                    const mintAddress = address;
+                    const txData = result.data;
                     
-                    // Show mint button
+                    // Show mint button (no inline handlers)
                     existingText.innerHTML = `
                         🎉 Congratulations! You've earned the Web3Base Quest!<br>
+                        <br>
                         <button id="mintNftBtn" 
-                                onclick="executeMintNFT('${address}', ${JSON.stringify(result.data).replace(/"/g, '&quot;')})"
                                 style="margin-top: 12px; padding: 8px 16px; background: #238636; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;">
                             🎨 Mint NFT on ZetaChain Testnet
                         </button>
@@ -1699,6 +1677,53 @@
                             </a>
                         </small>
                     `;
+                    
+                    // Attach click handler using addEventListener (CSP-safe)
+                    const mintBtn = document.getElementById('mintNftBtn');
+                    if (mintBtn) {
+                        mintBtn.addEventListener('click', async function() {
+                            console.log('🎨 Mint button clicked for:', mintAddress);
+                            try {
+                                // Switch to ZetaChain testnet if needed
+                                const chainId = `0x${txData.chainId.toString(16)}`;
+                                try {
+                                    await window.ethereum.request({
+                                        method: 'wallet_switchEthereumChain',
+                                        params: [{ chainId: chainId }],
+                                    });
+                                } catch (switchError) {
+                                    // Chain doesn't exist, add it
+                                    if (switchError.code === 4902) {
+                                        await window.ethereum.request({
+                                            method: 'wallet_addEthereumChain',
+                                            params: [{
+                                                chainId: chainId,
+                                                chainName: 'ZetaChain Testnet',
+                                                nativeCurrency: {
+                                                    name: 'ZETA',
+                                                    symbol: 'ZETA',
+                                                    decimals: 18,
+                                                },
+                                                rpcUrls: [txData.rpcUrl],
+                                                blockExplorerUrls: ['https://zetachain-athens-3.blockscout.com'],
+                                            }],
+                                        });
+                                    } else {
+                                        throw switchError;
+                                    }
+                                }
+                                
+                                // Execute mint
+                                executeMintNFT(mintAddress, txData);
+                            } catch (e) {
+                                console.error('Failed to mint NFT:', e);
+                                alert(`Error: ${e.message || 'Failed to mint NFT. Please try again.'}`);
+                            }
+                        });
+                        console.log('✅ Mint button handler attached');
+                    } else {
+                        console.error('❌ Mint button not found after creation');
+                    }
                 } else {
                     console.warn('⚠️ NFT mint failed:', result.error);
                 }
@@ -1766,15 +1791,15 @@
                 
                 console.log('✅ NFT mint transaction sent:', txHash);
                 
-                // Update UI
+                // Update UI - show pending state
                 const passContainer = document.getElementById('questPassContainer');
                 if (passContainer) {
                     const existingText = passContainer.querySelector('.quest-pass');
                     if (existingText) {
                         existingText.innerHTML = `
                             🎉 Congratulations! You've earned the Web3Base Quest!<br>
-                            <small style="opacity: 0.8; display: block; margin-top: 8px; color: #3fb950;">
-                                ✅ NFT minting transaction sent!<br>
+                            <small style="opacity: 0.8; display: block; margin-top: 8px; color: #58a6ff;">
+                                ⏳ Waiting for transaction confirmation...<br>
                                 <a href="https://zetachain-athens-3.blockscout.com/tx/${txHash}" 
                                    target="_blank" 
                                    style="color: #58a6ff; text-decoration: underline;">
@@ -1783,6 +1808,137 @@
                             </small>
                         `;
                     }
+                }
+                
+                // Wait for transaction confirmation
+                mintBtn.textContent = '⏳ Confirming...';
+                let confirmed = false;
+                let attempts = 0;
+                const maxAttempts = 60; // Wait up to 5 minutes (5s intervals)
+                
+                while (!confirmed && attempts < maxAttempts) {
+                    await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+                    attempts++;
+                    
+                    try {
+                        const receipt = await window.ethereum.request({
+                            method: 'eth_getTransactionReceipt',
+                            params: [txHash],
+                        });
+                        
+                        if (receipt && receipt.status === '0x1') {
+                            confirmed = true;
+                            console.log('✅ Transaction confirmed!', receipt);
+                            
+                            // Get token ID from transaction logs (if available)
+                            let tokenId = 'N/A';
+                            if (receipt.logs && receipt.logs.length > 0) {
+                                // Look for Transfer event (ERC721 mint emits Transfer from 0x0)
+                                for (const log of receipt.logs) {
+                                    if (log.topics && log.topics.length >= 3) {
+                                        // Transfer(address indexed from, address indexed to, uint256 indexed tokenId)
+                                        // topics[0] = Transfer event signature
+                                        // topics[1] = from address (should be 0x0 for mint)
+                                        // topics[2] = to address
+                                        // topics[3] = tokenId
+                                        if (log.topics.length >= 4) {
+                                            tokenId = BigInt(log.topics[3]).toString();
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // Show confetti celebration!
+                            if (typeof confetti !== 'undefined') {
+                                // Fire confetti multiple times for celebration
+                                confetti({
+                                    particleCount: 100,
+                                    spread: 70,
+                                    origin: { y: 0.6 }
+                                });
+                                
+                                setTimeout(() => {
+                                    confetti({
+                                        particleCount: 50,
+                                        angle: 60,
+                                        spread: 55,
+                                        origin: { x: 0 }
+                                    });
+                                }, 250);
+                                
+                                setTimeout(() => {
+                                    confetti({
+                                        particleCount: 50,
+                                        angle: 120,
+                                        spread: 55,
+                                        origin: { x: 1 }
+                                    });
+                                }, 400);
+                            }
+                            
+                            // Update UI with success message
+                            if (passContainer) {
+                                const existingText = passContainer.querySelector('.quest-pass');
+                                if (existingText) {
+                                    existingText.innerHTML = `
+                                        <div style="text-align: center; padding: 20px;">
+                                            <div style="font-size: 3em; margin-bottom: 15px;">🎉✨🎊</div>
+                                            <div style="font-size: 1.5em; font-weight: bold; color: #3fb950; margin-bottom: 10px;">
+                                                Here's Your NFT!
+                                            </div>
+                                            <div style="font-size: 1.1em; margin-bottom: 15px; color: #c9d1d9;">
+                                                Your Web3Base Quest NFT has been minted successfully!
+                                            </div>
+                                            <div style="background: rgba(56, 139, 253, 0.1); border: 1px solid rgba(56, 139, 253, 0.3); border-radius: 8px; padding: 15px; margin: 15px 0; text-align: left;">
+                                                <div style="margin-bottom: 8px;"><strong>Contract:</strong> <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px;">${txData.contractAddress.slice(0, 6)}...${txData.contractAddress.slice(-4)}</code></div>
+                                                ${tokenId !== 'N/A' ? `<div style="margin-bottom: 8px;"><strong>Token ID:</strong> #${tokenId}</div>` : ''}
+                                                <div><strong>Transaction:</strong> <a href="https://zetachain-athens-3.blockscout.com/tx/${txHash}" target="_blank" style="color: #58a6ff; text-decoration: underline;">View on Explorer →</a></div>
+                                            </div>
+                                            <div style="margin-top: 20px; font-size: 0.9em; color: #8b949e;">
+                                                🎨 Your NFT is now in your wallet!
+                                            </div>
+                                        </div>
+                                    `;
+                                }
+                            }
+                            
+                            mintBtn.textContent = '✅ Minted!';
+                            mintBtn.style.background = '#238636';
+                            mintBtn.disabled = true;
+                            break;
+                        } else if (receipt && receipt.status === '0x0') {
+                            throw new Error('Transaction failed on-chain');
+                        }
+                    } catch (err) {
+                        // Transaction not confirmed yet, continue waiting
+                        if (err.message && err.message.includes('Transaction failed')) {
+                            throw err;
+                        }
+                        console.log(`⏳ Waiting for confirmation... (${attempts}/${maxAttempts})`);
+                    }
+                }
+                
+                if (!confirmed) {
+                    // Transaction pending for too long, but show success anyway
+                    console.warn('⚠️ Transaction confirmation timeout, but transaction was sent');
+                    if (passContainer) {
+                        const existingText = passContainer.querySelector('.quest-pass');
+                        if (existingText) {
+                            existingText.innerHTML = `
+                                🎉 Congratulations! You've earned the Web3Base Quest!<br>
+                                <small style="opacity: 0.8; display: block; margin-top: 8px; color: #58a6ff;">
+                                    ⏳ Transaction sent! Confirmation pending...<br>
+                                    <a href="https://zetachain-athens-3.blockscout.com/tx/${txHash}" 
+                                       target="_blank" 
+                                       style="color: #58a6ff; text-decoration: underline;">
+                                        View on Block Explorer
+                                    </a>
+                                </small>
+                            `;
+                        }
+                    }
+                    mintBtn.textContent = '⏳ Pending...';
                 }
             } catch (error) {
                 console.error('❌ Mint transaction error:', error);

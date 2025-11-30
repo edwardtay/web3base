@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 
-const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY || 'YW5BmhSi06qeoylw_QkK8KT4js_gs4Cg';
+const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY || '';
 const ALCHEMY_BASE_URL = `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`;
 
 interface AlchemyTokenBalance {
