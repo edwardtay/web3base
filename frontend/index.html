@@ -1167,21 +1167,11 @@
 
         // Keyboard shortcuts
         document.addEventListener('keydown', function(event) {
-            // Escape key - Close modal or clear chat
+            // Escape key - Close modal
             if (event.key === 'Escape') {
                 const modal = document.getElementById('infoModal');
                 if (modal && modal.classList.contains('active')) {
                     closeInfoModal(event);
-                } else {
-                    // Clear chat if modal is not open
-                    const input = document.getElementById('messageInput');
-                    if (input && document.activeElement === input && input.value) {
-                        // If typing, just clear input
-                        input.value = '';
-                    } else {
-                        // Otherwise clear entire chat
-                        clearChat();
-                    }
                 }
             }
         });
