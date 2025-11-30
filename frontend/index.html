@@ -930,14 +930,14 @@
             <div id="questView" class="dashboard-view">
                 <div class="quest-container">
                     <div class="quest-header">
-                        <div class="quest-title">🎯 Protocol Quest Pass</div>
+                        <div class="quest-title">🎯 Web3Base Quest</div>
                         <button class="quest-verify-btn" onclick="verifyQuests()" id="questVerifyBtn">
                             Verify Quests
                         </button>
                     </div>
                     
                     <p style="color: #8b949e; margin-bottom: 20px; font-size: 0.95em;">
-                        Complete quests by interacting with partner protocols. Earn a pass by completing at least 3 quests!
+                        Complete quests by interacting with partner protocols. Earn the Web3Base Quest by completing at least 3 quests!
                     </p>
                     
                     <div class="quest-progress" id="questProgress">
@@ -994,7 +994,17 @@
                     
                     <div id="questPassContainer" style="display: none;">
                         <div class="quest-pass">
-                            🎉 Congratulations! You've earned the Protocol Quest Pass!
+                            🎉 Congratulations! You've earned the Web3Base Quest!
+                        </div>
+                        <div style="margin-top: 16px; padding: 12px; background: rgba(88, 166, 255, 0.1); border-radius: 8px; border: 1px solid rgba(88, 166, 255, 0.3);">
+                            <div style="font-size: 0.9em; color: #58a6ff; margin-bottom: 8px;">
+                                💧 Need testnet tokens to mint NFT?
+                            </div>
+                            <a href="https://zetachain.faucetme.pro/" 
+                               target="_blank" 
+                               style="color: #58a6ff; text-decoration: underline; font-size: 0.9em;">
+                                Get ZETA tokens from ZetaChain Faucet →
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -1459,10 +1469,19 @@
         
         // Quest verification
         async function verifyQuests() {
-            const address = connectedWallet || document.getElementById('manualAddressInput')?.value.trim();
+            let address = connectedWallet || document.getElementById('manualAddressInput')?.value.trim();
             
             if (!address) {
                 alert('Please connect a wallet or enter an address first');
+                return;
+            }
+            
+            // Normalize address to lowercase (backend expects lowercase format)
+            address = address.toLowerCase();
+            
+            // Validate address format
+            if (!/^0x[a-f0-9]{40}$/.test(address)) {
+                alert('Invalid address format. Please use a valid Ethereum address (0x followed by 40 hex characters).');
                 return;
             }
             
@@ -1470,9 +1489,17 @@
             const questProgress = document.getElementById('questProgress');
             
             try {
+                // Clear any previous error messages
+                questProgress.textContent = '';
+                questProgress.style.color = '';
+                
                 verifyBtn.disabled = true;
                 verifyBtn.textContent = 'Verifying...';
                 questProgress.textContent = 'Checking protocol interactions...';
+                questProgress.style.color = '#58a6ff';
+                
+                console.log('🔍 Verifying quests for address:', address);
+                console.log('📡 API endpoint:', API_BASE_URL + '/api/quest/verify');
                 
                 const response = await fetch(API_BASE_URL + '/api/quest/verify', {
                     method: 'POST',
@@ -1480,15 +1507,32 @@
                     body: JSON.stringify({ address })
                 });
                 
-                if (!response.ok) {
-                    throw new Error('Quest verification failed');
-                }
+                console.log('📥 Response status:', response.status, response.statusText);
                 
                 const result = await response.json();
-                const questPass = result.data;
+                console.log('📦 Response data:', result);
+                
+                if (!response.ok) {
+                    // Handle error response from backend
+                    const errorMsg = result.error || result.message || `HTTP ${response.status}: ${response.statusText}`;
+                    throw new Error(errorMsg);
+                }
+                
+                // Check if response has success flag
+                if (result.success === false) {
+                    throw new Error(result.error || 'Quest verification failed');
+                }
+                
+                // Get quest pass data
+                const questPass = result.data || result;
+                
+                if (!questPass || !questPass.quests) {
+                    throw new Error('Invalid response format from server');
+                }
                 
                 // Update quest progress
                 questProgress.textContent = `Progress: ${questPass.totalCompleted}/5 quests completed`;
+                questProgress.style.color = '#3fb950';
                 
                 // Update quest items
                 const questIcons = {
@@ -1500,6 +1544,11 @@
                 };
                 
                 const questList = document.getElementById('questList');
+                if (!questList) {
+                    console.error('Quest list element not found');
+                    return;
+                }
+                
                 questList.innerHTML = '';
                 
                 questPass.quests.forEach(quest => {
@@ -1507,7 +1556,7 @@
                     questItem.className = `quest-item ${quest.completed ? 'completed' : 'incomplete'}`;
                     
                     questItem.innerHTML = `
-                        <div class="quest-icon">${questIcons[quest.protocol]}</div>
+                        <div class="quest-icon">${questIcons[quest.protocol] || '📋'}</div>
                         <div class="quest-details">
                             <div class="quest-name">${quest.protocol}</div>
                             <div class="quest-description">${quest.details || quest.proof || 'Not verified'}</div>
@@ -1522,21 +1571,239 @@
                 
                 // Show pass if awarded
                 const passContainer = document.getElementById('questPassContainer');
-                if (questPass.passAwarded) {
-                    passContainer.style.display = 'block';
-                } else {
-                    passContainer.style.display = 'none';
+                if (passContainer) {
+                    if (questPass.passAwarded) {
+                        passContainer.style.display = 'block';
+                        
+                        // Automatically mint NFT on ZetaChain testnet when pass is earned
+                        console.log('🎉 Quest pass earned! Initiating NFT mint on ZetaChain testnet...');
+                        mintQuestNFT(address);
+                    } else {
+                        passContainer.style.display = 'none';
+                    }
                 }
                 
+                console.log('✅ Quest verification completed successfully');
+                
             } catch (error) {
-                console.error('Quest verification error:', error);
-                questProgress.textContent = 'Verification failed. Please try again.';
-                alert('Failed to verify quests. Please try again.');
+                console.error('❌ Quest verification error:', error);
+                const errorMsg = error.message || 'Quest verification failed';
+                questProgress.textContent = `Verification failed: ${errorMsg}`;
+                questProgress.style.color = '#f85149';
+                
+                // Show user-friendly error message
+                alert(`Failed to verify quests: ${errorMsg}\n\nPlease check:\n- Wallet is connected\n- Address is valid\n- API server is accessible`);
             } finally {
                 verifyBtn.disabled = false;
                 verifyBtn.textContent = 'Verify Quests';
             }
         }
+        
+        // Mint Web3Base Quest NFT on ZetaChain testnet
+        async function mintQuestNFT(address) {
+            try {
+                console.log('🎨 Minting Web3Base Quest NFT for:', address);
+                
+                const response = await fetch(API_BASE_URL + '/api/quest/mint-nft', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address })
+                });
+                
+                const result = await response.json();
+                console.log('🎨 NFT mint response:', result);
+                
+                if (result.success) {
+                    const passContainer = document.getElementById('questPassContainer');
+                    if (!passContainer) return;
+                    
+                    const existingText = passContainer.querySelector('.quest-pass');
+                    if (!existingText) return;
+                    
+                    // Check if contract is configured
+                    if (!result.data.contractAddress || result.data.contractAddress === '') {
+                        existingText.innerHTML = `
+                            🎉 Congratulations! You've earned the Web3Base Quest!<br>
+                            <small style="opacity: 0.8; display: block; margin-top: 8px;">
+                                NFT contract not yet deployed. Get testnet tokens: 
+                                <a href="${result.data.faucetUrl || 'https://zetachain.faucetme.pro/'}" 
+                                   target="_blank" 
+                                   style="color: #58a6ff; text-decoration: underline;">
+                                    ZetaChain Faucet
+                                </a>
+                            </small>
+                        `;
+                        return;
+                    }
+                    
+                    // Check if MetaMask is available
+                    if (typeof window.ethereum === 'undefined') {
+                        existingText.innerHTML = `
+                            🎉 Congratulations! You've earned the Web3Base Quest!<br>
+                            <small style="opacity: 0.8; display: block; margin-top: 8px;">
+                                Please install MetaMask to mint your NFT.<br>
+                                <a href="${result.data.faucetUrl || 'https://zetachain.faucetme.pro/'}" 
+                                   target="_blank" 
+                                   style="color: #58a6ff; text-decoration: underline;">
+                                    Get testnet tokens from faucet
+                                </a>
+                            </small>
+                        `;
+                        return;
+                    }
+                    
+                    // Switch to ZetaChain testnet if needed
+                    const chainId = `0x${result.data.chainId.toString(16)}`;
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: chainId }],
+                        });
+                    } catch (switchError) {
+                        // Chain doesn't exist, add it
+                        if (switchError.code === 4902) {
+                            await window.ethereum.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [{
+                                    chainId: chainId,
+                                    chainName: 'ZetaChain Testnet',
+                                    nativeCurrency: {
+                                        name: 'ZETA',
+                                        symbol: 'ZETA',
+                                        decimals: 18,
+                                    },
+                                    rpcUrls: [result.data.rpcUrl],
+                                    blockExplorerUrls: ['https://zetachain-athens-3.blockscout.com'],
+                                }],
+                            });
+                        } else {
+                            throw switchError;
+                        }
+                    }
+                    
+                    // Show mint button
+                    existingText.innerHTML = `
+                        🎉 Congratulations! You've earned the Web3Base Quest!<br>
+                        <button id="mintNftBtn" 
+                                onclick="executeMintNFT('${address}', ${JSON.stringify(result.data).replace(/"/g, '&quot;')})"
+                                style="margin-top: 12px; padding: 8px 16px; background: #238636; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;">
+                            🎨 Mint NFT on ZetaChain Testnet
+                        </button>
+                        <br>
+                        <small style="opacity: 0.7; display: block; margin-top: 8px;">
+                            Need testnet tokens? 
+                            <a href="${result.data.faucetUrl || 'https://zetachain.faucetme.pro/'}" 
+                               target="_blank" 
+                               style="color: #58a6ff; text-decoration: underline;">
+                                Get ZETA from faucet
+                            </a>
+                        </small>
+                    `;
+                } else {
+                    console.warn('⚠️ NFT mint failed:', result.error);
+                }
+            } catch (error) {
+                console.error('❌ NFT mint error:', error);
+                // Don't show error to user - quest pass is still earned
+            }
+        }
+        
+        // Execute NFT minting transaction
+        async function executeMintNFT(address, txData) {
+            const mintBtn = document.getElementById('mintNftBtn');
+            if (!mintBtn) return;
+            
+            try {
+                mintBtn.disabled = true;
+                mintBtn.textContent = '⏳ Minting...';
+                
+                // Get current account
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                if (!accounts || accounts.length === 0) {
+                    throw new Error('Please connect your wallet');
+                }
+                
+                const currentAccount = accounts[0].toLowerCase();
+                if (currentAccount !== address.toLowerCase()) {
+                    throw new Error('Please use the same wallet that earned the quest pass');
+                }
+                
+                // Get gas price
+                const gasPriceResponse = await window.ethereum.request({
+                    method: 'eth_gasPrice',
+                });
+                
+                // Estimate gas
+                let gasLimit = txData.transaction.gas;
+                try {
+                    const gasEstimate = await window.ethereum.request({
+                        method: 'eth_estimateGas',
+                        params: [{
+                            from: address,
+                            to: txData.contractAddress,
+                            data: txData.transaction.data,
+                            value: txData.transaction.value,
+                        }],
+                    });
+                    gasLimit = gasEstimate;
+                } catch (err) {
+                    console.warn('Gas estimation failed, using default:', err);
+                }
+                
+                // Send transaction
+                // Note: questMint(address) function signature
+                const txHash = await window.ethereum.request({
+                    method: 'eth_sendTransaction',
+                    params: [{
+                        from: address,
+                        to: txData.contractAddress,
+                        data: txData.transaction.data, // Contains questMint(address) call
+                        value: txData.transaction.value,
+                        gas: gasLimit,
+                        gasPrice: gasPriceResponse,
+                    }],
+                });
+                
+                console.log('✅ NFT mint transaction sent:', txHash);
+                
+                // Update UI
+                const passContainer = document.getElementById('questPassContainer');
+                if (passContainer) {
+                    const existingText = passContainer.querySelector('.quest-pass');
+                    if (existingText) {
+                        existingText.innerHTML = `
+                            🎉 Congratulations! You've earned the Web3Base Quest!<br>
+                            <small style="opacity: 0.8; display: block; margin-top: 8px; color: #3fb950;">
+                                ✅ NFT minting transaction sent!<br>
+                                <a href="https://zetachain-athens-3.blockscout.com/tx/${txHash}" 
+                                   target="_blank" 
+                                   style="color: #58a6ff; text-decoration: underline;">
+                                    View on Block Explorer
+                                </a>
+                            </small>
+                        `;
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Mint transaction error:', error);
+                mintBtn.disabled = false;
+                mintBtn.textContent = '🎨 Mint NFT on ZetaChain Testnet';
+                
+                let errorMsg = 'Failed to mint NFT';
+                if (error.message) {
+                    errorMsg = error.message;
+                } else if (error.code === 4001) {
+                    errorMsg = 'Transaction rejected by user';
+                } else if (error.code === -32603) {
+                    errorMsg = 'Transaction failed. Make sure you have enough ZETA for gas.';
+                }
+                
+                alert(`NFT Mint Error: ${errorMsg}\n\nGet testnet tokens: https://zetachain.faucetme.pro/`);
+            }
+        }
+        window.executeMintNFT = executeMintNFT;
+        window.mintQuestNFT = mintQuestNFT;
+        window.verifyQuests = verifyQuests;
         window.switchView = switchView;
         
         // Dashboard data loading
@@ -1702,7 +1969,7 @@
         let connectedWallet = null;
         
         // Toggle wallet connection (connect or disconnect)
-        async function toggleWalletConnection() {
+        window.toggleWalletConnection = async function toggleWalletConnection() {
             const btn = document.getElementById('connectWalletBtn');
             const status = document.getElementById('walletStatus');
             
@@ -1757,9 +2024,8 @@
                     addMessage('system', `❌ Error: ${error.message}`);
                 }
             }
-        }
-        window.toggleWalletConnection = toggleWalletConnection;
-        window.connectWallet = toggleWalletConnection; // Backward compatibility
+        };
+        window.connectWallet = window.toggleWalletConnection; // Backward compatibility
         
         // Analyze manually entered address (supports ENS)
         async function analyzeManualAddress() {
