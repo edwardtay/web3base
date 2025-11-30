@@ -60,6 +60,22 @@
             flex-direction: column;
             box-shadow: none;
         }
+        
+        /* Responsive margins for larger screens */
+        @media (min-width: 1024px) {
+            .container {
+                max-width: 1400px;
+                margin: 0 auto;
+                border-left: 1px solid rgba(255, 255, 255, 0.08);
+                border-right: 1px solid rgba(255, 255, 255, 0.08);
+            }
+        }
+        
+        @media (min-width: 1440px) {
+            .container {
+                max-width: 1600px;
+            }
+        }
         .header {
             background: linear-gradient(135deg, #1a1f2e 0%, #161b22 100%);
             border-bottom: 1px solid rgba(0, 212, 255, 0.2);
